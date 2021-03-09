@@ -34,7 +34,7 @@ serving on a single port (default 8080) of a Raspberry Pi.
 - Raspberry Pi 4. Will not work well on Raspberry Pi Zero W. The Pi Zero W, having a single processor, will experience performance issues because it will not handle the necessary concurrency well (needs to measure temperature, toggle heating elements, and serve the UI static files / requests).
 - [Solid state relay](https://www.amazon.com/dp/B00HV974KC/ref=cm_sw_em_r_mt_dp_U_9WTYEbEA0TNGG)
 - [Type K thermocouple](https://www.amazon.com/gp/product/B01NBM7SBK)
-- [MAX31855 thermocouple amplifier](https://www.adafruit.com/product/269)
+- [MAX6675 thermocouple amplifier]()
 - [Male blade connectors](https://en.wikipedia.org/wiki/FASTON_terminal#/media/File:Faston_Style_Terminals_Male.jpg)
 - Electrical wire
 

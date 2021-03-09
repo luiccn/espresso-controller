@@ -34,4 +34,6 @@ require (
 	google.golang.org/genproto v0.0.0-20200409111301-baae70f3302d // indirect
 	google.golang.org/grpc v1.27.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
+	github.com/RobinUS2/golang-moving-average v1.0.0
+
 )

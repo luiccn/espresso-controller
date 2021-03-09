@@ -8,6 +8,8 @@ import (
 
 	"github.com/gregorychen3/espresso-controller/internal/log"
 	"go.uber.org/zap"
+
+	movingaverage "github.com/RobinUS2/golang-moving-average"
 )
 
 type Sample struct {
@@ -38,12 +40,18 @@ func (m *Monitor) Run() {
 	// sample temperature on interval
 	go func() {
 		for {
+			ma := movingaverage.Concurrent(movingaverage.New(100))
+
 			sample, err := m.sampler.Sample()
 			if err != nil {
 				log.Error("Failed to sample temperature", zap.Error(err))
 				time.Sleep(time.Second)
 				continue
 			}
+
+			ma.Add(float64(sample.Value))
+			avg := float32(ma.Avg())
+			sample.Value = avg
 
 			m.temperatureHistoryMu.Lock()
 			m.temperatureHistory = append(m.temperatureHistory, sample)

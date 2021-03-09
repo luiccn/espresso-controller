@@ -10,7 +10,7 @@ import (
 
 	"github.com/gregorychen3/espresso-controller/internal/espresso/heating_element"
 	"github.com/gregorychen3/espresso-controller/internal/espresso/temperature"
-	"github.com/gregorychen3/espresso-controller/internal/espresso/temperature/max31855"
+	"github.com/gregorychen3/espresso-controller/internal/espresso/temperature/max6675"
 	"github.com/gregorychen3/espresso-controller/internal/log"
 	"github.com/gregorychen3/espresso-controller/pkg/espressopb"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -62,7 +62,7 @@ func (s *Server) Run() error {
 	heatingElem.Run()
 
 	boilerMonitor := temperature.NewMonitor(
-		max31855.NewMax31855(s.c.BoilerThermCsPin, s.c.BoilerThermClkPin, s.c.BoilerThermMisoPin),
+		max6675.NewMax6675(s.c.BoilerThermCsPin, s.c.BoilerThermClkPin, s.c.BoilerThermMisoPin),
 		time.Second,
 	)
 	boilerMonitor.Run()
