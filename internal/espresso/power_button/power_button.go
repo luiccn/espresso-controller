@@ -46,33 +46,25 @@ func (p *PowerButton) Run() {
 }
 
 func (p *PowerButton) PowerOn() {
-	if p.isMachinePowerOff() {
-		p.relayOn()
+	if p.IsMachinePowerOff() {
+		p.powerButtonRelayPin.High()
+	p.machineOn = true	
 	}
 }
 
 func (p *PowerButton) PowerOff() {
-	if p.isMachinePowerOn() {
-		p.relayOff()
+	if p.IsMachinePowerOn() {
+		p.powerButtonRelayPin.Low()
+	p.machineOn = false	
 	}
 }
 
 func (p *PowerButton) PowerToggle() {
-	if p.isMachinePowerOn() {
-		p.relayOff()
+	if p.IsMachinePowerOn() {
+		p.PowerOff()
 	} else {
-		p.relayOn()	
+		p.PowerOn()	
 	}
-}
-
-func (p *PowerButton) relayOn() {
-	p.powerButtonRelayPin.High()
-	p.machineOn = true	
-}
-
-func (p *PowerButton) relayOff() {
-	p.powerButtonRelayPin.Low()
-	p.machineOn = false	
 }
 
 func (p *PowerButton) isPowerButtonOn() bool {
@@ -83,12 +75,12 @@ func (p *PowerButton) isPowerButtonOff() bool {
 	return !p.isPowerButtonOff()
 }
 
-func (p *PowerButton) isMachinePowerOn() bool {
+func (p *PowerButton) IsMachinePowerOn() bool {
 	return p.powerButtonRelayPin.Read() == rpio.High && p.machineOn == true
 }
 
-func (p *PowerButton) isMachinePowerOff() bool {
-	return !p.isMachinePowerOn()
+func (p *PowerButton) IsMachinePowerOff() bool {
+	return !p.IsMachinePowerOn()
 }
 
 func (p *PowerButton) Shutdown() {

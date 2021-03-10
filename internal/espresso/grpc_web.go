@@ -2,13 +2,14 @@ package espresso
 
 import (
 	"context"
+	"encoding/json"
 	"net"
 	"net/http"
 	"time"
 
+	"github.com/gregorychen3/espresso-controller/internal/espresso/power_button"
 	"github.com/gregorychen3/espresso-controller/internal/log"
 	"github.com/gregorychen3/espresso-controller/internal/metrics"
-	"github.com/gregorychen3/espresso-controller/internal/espresso/power_button"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -86,15 +87,35 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 
 	router.Post("/power_button/on", func(writer http.ResponseWriter, req *http.Request) {
 		powerButton.PowerOn()
+		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(200)
 	})
 	router.Post("/power_button/off", func(writer http.ResponseWriter, req *http.Request) {
 		powerButton.PowerOff()
+		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(200)
 	})
 	router.Post("/power_button/toggle", func(writer http.ResponseWriter, req *http.Request) {
 		powerButton.PowerToggle()
+		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(200)
+	})
+	router.Get("/power_button/status", func(writer http.ResponseWriter, req *http.Request) {
+
+		type response struct {
+			Status string
+		}
+
+		writer.Header().Add("Content-Type", "application/json")
+		writer.WriteHeader(200)
+
+		if powerButton.IsMachinePowerOn() {
+			j, _ := json.Marshal(&response{Status: "ON"})
+			writer.Write(j)
+		} else {
+			j, _ := json.Marshal(&response{Status: "OFF"})
+			writer.Write(j)
+		}
 	})
 
 	router.Handle("/metrics", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
