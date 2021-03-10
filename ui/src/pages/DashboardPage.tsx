@@ -105,14 +105,8 @@ export default () => {
   };
 
   function toggle() {
-
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-  };
-    async () => {
-      return await fetch("/power_button/toggle", requestOptions)
-    }
+    const requestOptions = {method: 'POST'};
+     fetch("/power_button/toggle", requestOptions).catch(() => {});
   }
 
   return (
@@ -176,7 +170,7 @@ export default () => {
           </Paper>
         </Grid>
         <Grid item xs={12} md={3} lg={3}>
-          <Paper className={classes.paper} onClick={() => {toggle()}}>
+          <Paper className={classes.paper} onClick={toggle}>
             <MetricCard
               name="Power"
               value={powerStatus ?? "--"}
