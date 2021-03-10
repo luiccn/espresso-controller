@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gregorychen3/espresso-controller/internal/espresso/heating_element"
+	"github.com/gregorychen3/espresso-controller/internal/espresso/power_button"
 	"github.com/gregorychen3/espresso-controller/internal/espresso/temperature"
 	"github.com/gregorychen3/espresso-controller/internal/espresso/temperature/max6675"
 	"github.com/gregorychen3/espresso-controller/internal/log"
@@ -27,6 +28,8 @@ import (
 type Configuration struct {
 	Port                   int
 	HeatingElementRelayPin int
+	PowerButtonRelayPin    int
+	PowerButtonPin         int
 	BoilerThermCsPin       int
 	BoilerThermClkPin      int
 	BoilerThermMisoPin     int
@@ -37,6 +40,8 @@ type Server struct {
 
 	grpcEspressoServer espressopb.EspressoServer
 	grpcServer         *grpc.Server
+
+	powerButton *power_button.PowerButton
 
 	heatingElem *heating_element.HeatingElement
 
@@ -56,6 +61,10 @@ func (s *Server) Run() error {
 	if err := rpio.Open(); err != nil {
 		return errors.Wrap(err, "initializing gpio access")
 	}
+
+	powerButton := power_button.NewPowerButton(s.c.PowerButtonRelayPin, s.c.PowerButtonPin)
+	s.powerButton = powerButton
+	powerButton.Run()
 
 	heatingElem := heating_element.NewHeatingElement(s.c.HeatingElementRelayPin)
 	s.heatingElem = heatingElem
@@ -145,6 +154,7 @@ func (s *Server) watchSignals() {
 func (s *Server) Shutdown() error {
 	log.Info("Shutting down heating element relay")
 	s.heatingElem.Shutdown()
+	s.powerButton.Shutdown()
 
 	log.Info("Unmapping gpio memory")
 	if err := rpio.Close(); err != nil {

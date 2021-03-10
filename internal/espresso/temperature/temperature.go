@@ -31,6 +31,7 @@ type Monitor struct {
 	temperatureHistory   []*Sample
 }
 
+// NewMonitor creates a sampler using a sample rate
 func NewMonitor(sampler Sampler, sampleRate time.Duration) *Monitor {
 	return &Monitor{
 		subscriptionChans: map[uuid.UUID]chan *Sample{},
@@ -38,8 +39,8 @@ func NewMonitor(sampler Sampler, sampleRate time.Duration) *Monitor {
 	}
 }
 
+// Run samples temperature on interval 
 func (m *Monitor) Run() {
-	// sample temperature on interval
 	ma := movingaverage.Concurrent(movingaverage.New(10))
 	go func() {
 		for {
