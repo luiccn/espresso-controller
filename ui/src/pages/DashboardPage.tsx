@@ -28,7 +28,7 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     overflow: "auto",
     flexDirection: "column",
-    height: 500,
+    height: 300,
   },
 }));
 
@@ -57,11 +57,13 @@ export default () => {
   // System metrics
   // --------------
   const [metricsRefreshedAt, setMetricsRefreshedAt] = useState<moment.Moment | undefined>();
-  const [cpuUtilization, setCpuUtilization] = useState<number | undefined>();
-  const [memUtilization, setMemUtilization] = useState<number | undefined>();
   const [cpuTemperature, setCpuTemperature] = useState<number | undefined>();
-  const [gpuTemperature, setGpuTemperature] = useState<number | undefined>();
   const [powerStatus, setPowerStatus] = useState<string | undefined>();
+
+  // const [cpuUtilization, setCpuUtilization] = useState<number | undefined>();
+  // const [memUtilization, setMemUtilization] = useState<number | undefined>();
+  // const [gpuTemperature, setGpuTemperature] = useState<number | undefined>();
+  
   const refreshMetrics = async () => {
     const metricsResp = await fetch("/metrics");
     const metricsRaw = await metricsResp.text();
@@ -73,14 +75,15 @@ export default () => {
       return { ...acc, [cur.name]: cur };
     }, {});
 
+    setMetricsRefreshedAt(moment());
+
+    setCpuTemperature(parseFloat(metricsMap.espresso_raspi_cpu_temperature.metrics[0].value));
     setPowerStatus(power.Status);
 
-    setMetricsRefreshedAt(moment());
-    setCpuUtilization(100 * parseFloat(metricsMap.espresso_raspi_cpu_utilization_ratio.metrics[0].value));
-    setMemUtilization(100 * parseFloat(metricsMap.espresso_raspi_mem_utilization_ratio.metrics[0].value));
-    setCpuTemperature(parseFloat(metricsMap.espresso_raspi_cpu_temperature.metrics[0].value));
-    setGpuTemperature(parseFloat(metricsMap.espresso_raspi_gpu_temperature.metrics[0].value));
-    
+
+    // setCpuUtilization(100 * parseFloat(metricsMap.espresso_raspi_cpu_utilization_ratio.metrics[0].value));
+    // setMemUtilization(100 * parseFloat(metricsMap.espresso_raspi_mem_utilization_ratio.metrics[0].value));
+    // setGpuTemperature(parseFloat(metricsMap.espresso_raspi_gpu_temperature.metrics[0].value));
   };
   useEffect(() => {
     refreshMetrics();
@@ -112,20 +115,41 @@ export default () => {
   return (
     <>
       {showSetTemperatureModal && <ConfigurationDialog />}
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={9} lg={9}>
+      <Grid container spacing={1}>
+        <Grid item xs={12}>
           <Paper className={classes.tallPaper}>
             <TemperatureChart />
           </Paper>
         </Grid>
-
-        <Grid item xs={12} md={3} lg={3}>
-          <Paper className={classes.tallPaper}>
+        <Grid item xs={6}>
+          <Paper className={classes.paper}>
+            <MetricCard
+              name="CPU 🌡️"
+              value={cpuTemperature?.toFixed(2) ?? "--"}
+              unitLabel="°C"
+              asOf={metricsRefreshedAt}
+              severity={cpuTemperature ? getRaspiTemperatureSeverity(cpuTemperature) : "normal"}
+            />
+          </Paper>
+        </Grid>
+        <Grid item xs={6}>
+          <Paper className={classes.paper} onClick={toggle}>
+            <MetricCard
+              name="Power ⚡"
+              value={powerStatus ?? "--"}
+              unitLabel=""
+              asOf={metricsRefreshedAt}
+              severity={ powerStatus === "ON" ? "success" : "warning"  }
+            />
+          </Paper>
+        </Grid>
+        <Grid item xs={12}>
+          <Paper className={classes.paper}>
             <TemperatureCard />
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={3} lg={3}>
+        {/* <Grid item xs={12} md={3} lg={3}>
           <Paper className={classes.paper}>
             <MetricCard
               name="CPU Usage"
@@ -146,19 +170,8 @@ export default () => {
               severity={"normal"}
             />
           </Paper>
-        </Grid>
-        <Grid item xs={12} md={3} lg={3}>
-          <Paper className={classes.paper}>
-            <MetricCard
-              name="CPU Temperature"
-              value={cpuTemperature?.toFixed(2) ?? "--"}
-              unitLabel="°C"
-              asOf={metricsRefreshedAt}
-              severity={cpuTemperature ? getRaspiTemperatureSeverity(cpuTemperature) : "normal"}
-            />
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={3} lg={3}>
+        </Grid> */}
+        {/* <Grid item xs={12} md={3} lg={3}>
           <Paper className={classes.paper}>
             <MetricCard
               name="GPU Temperature"
@@ -168,18 +181,8 @@ export default () => {
               severity={gpuTemperature ? getRaspiTemperatureSeverity(gpuTemperature) : "normal"}
             />
           </Paper>
-        </Grid>
-        <Grid item xs={12} md={3} lg={3}>
-          <Paper className={classes.paper} onClick={toggle}>
-            <MetricCard
-              name="Power"
-              value={powerStatus ?? "--"}
-              unitLabel=""
-              asOf={metricsRefreshedAt}
-              severity={ powerStatus == "ON" ? "success" : "warning"  }
-            />
-          </Paper>
-        </Grid>
+        </Grid> */}
+   
       </Grid>
     </>
   );

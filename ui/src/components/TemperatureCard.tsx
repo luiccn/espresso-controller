@@ -1,4 +1,4 @@
-import { Button } from "@material-ui/core";
+import { Button, Grid, Paper } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import React from "react";
@@ -26,29 +26,41 @@ export default function TemperatureCard() {
 
   return (
     <>
-      <Title>Temperature</Title>
-      <Typography variant="h4" color="primary">
-        {curTemp?.value.toFixed(2) ?? "--"} °C
-      </Typography>
-      {curTemp && (
-        <Typography color="textSecondary" className={classes.temperatureContext}>
-          as of {curTemp.observedAt.format("HH:mm:ss")}
+
+      <Grid container spacing={1} >
+        <Grid item xs={6}>
+          <Paper>
+            <Title>Boiler 🌡️</Title>
+            <Typography variant="h4" color="primary">
+              {curTemp?.value.toFixed(2) ?? "--"} °C
         </Typography>
-      )}
-      <Title>Target Temperature</Title>
-      <Typography variant="h4" color="primary">
-        {configuration?.targetTemp.value} °C
+            {curTemp && (
+              <Typography color="textSecondary" className={classes.temperatureContext}>
+                as of {curTemp.observedAt.format("HH:mm:ss")}
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
+
+        <Grid item xs={6}>
+          <Paper>
+            <Title>Target 🌡️</Title>
+            <Typography variant="h4" color="primary">
+              {configuration?.targetTemp.value} °C
       </Typography>
-      <Typography color="textSecondary" className={classes.temperatureContext}>
-        set {configuration?.targetTemp.setAt.fromNow()}
-      </Typography>
-      <div>
-        <div className={classes.setTargetTempButton}>
-          <Button variant="contained" color="primary" size="small" onClick={handleConfigureClicked}>
-            CONFIGURE PID
+            <Typography color="textSecondary" className={classes.temperatureContext}>
+              set {configuration?.targetTemp.setAt.fromNow()}
+            </Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12}>
+          <Paper className={classes.setTargetTempButton}>
+            <Button variant="contained" color="primary" size="small" onClick={handleConfigureClicked}>
+              CONFIGURE PID
           </Button>
-        </div>
-      </div>
+          </Paper>
+        </Grid>
+      </Grid>
     </>
   );
 }
