@@ -11,7 +11,7 @@ export default function TemperatureChart() {
   const samples = useSelector(selectTempHistory);
   const data = samples.map((s) => ({
     time: s.observedAt.format("HH:mm"),
-    temp: s.value,
+    temp: s.value.toFixed(2),
   }));
 
   const targetTemp = useSelector(selectConfiguration)?.targetTemp;
@@ -34,7 +34,7 @@ export default function TemperatureChart() {
         />
         <Tooltip />
         {targetTemp && (
-          <ReferenceLine y={targetTemp.value} stroke="green" strokeDasharray="3 3" ifOverflow="extendDomain" />
+          <ReferenceLine y={targetTemp.value.toFixed(2)} stroke="green" strokeDasharray="3 3" ifOverflow="extendDomain" />
         )}
       </LineChart>
     </ResponsiveContainer>

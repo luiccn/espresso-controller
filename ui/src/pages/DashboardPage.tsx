@@ -104,6 +104,17 @@ export default () => {
     }
   };
 
+  function toggle() {
+
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+  };
+    async () => {
+      return await fetch("/power_button/toggle", requestOptions)
+    }
+  }
+
   return (
     <>
       {showSetTemperatureModal && <ConfigurationDialog />}
@@ -165,13 +176,13 @@ export default () => {
           </Paper>
         </Grid>
         <Grid item xs={12} md={3} lg={3}>
-          <Paper className={classes.paper}>
+          <Paper className={classes.paper} onClick={() => {toggle()}}>
             <MetricCard
               name="Power"
               value={powerStatus ?? "--"}
               unitLabel=""
               asOf={metricsRefreshedAt}
-              severity={"normal"}
+              severity={ powerStatus == "ON" ? "success" : "warning"  }
             />
           </Paper>
         </Grid>
