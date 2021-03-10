@@ -39,6 +39,10 @@ export default () => {
 
   const d = useDispatch();
 
+  interface PowerStatus {
+    Status : string
+  }
+
   //
   // Boiler temperature
   // ------------------
@@ -57,18 +61,26 @@ export default () => {
   const [memUtilization, setMemUtilization] = useState<number | undefined>();
   const [cpuTemperature, setCpuTemperature] = useState<number | undefined>();
   const [gpuTemperature, setGpuTemperature] = useState<number | undefined>();
+  const [powerStatus, setPowerStatus] = useState<string | undefined>();
   const refreshMetrics = async () => {
     const metricsResp = await fetch("/metrics");
     const metricsRaw = await metricsResp.text();
+    
+    const powerResp = await fetch("/power_button/status");
+    const power = await powerResp.json() as PowerStatus;
+    
     const metricsMap: { [key: string]: Metric } = parsePromText(metricsRaw).reduce((acc, cur) => {
       return { ...acc, [cur.name]: cur };
     }, {});
+
+    setPowerStatus(power.Status);
 
     setMetricsRefreshedAt(moment());
     setCpuUtilization(100 * parseFloat(metricsMap.espresso_raspi_cpu_utilization_ratio.metrics[0].value));
     setMemUtilization(100 * parseFloat(metricsMap.espresso_raspi_mem_utilization_ratio.metrics[0].value));
     setCpuTemperature(parseFloat(metricsMap.espresso_raspi_cpu_temperature.metrics[0].value));
     setGpuTemperature(parseFloat(metricsMap.espresso_raspi_gpu_temperature.metrics[0].value));
+    
   };
   useEffect(() => {
     refreshMetrics();
@@ -149,6 +161,17 @@ export default () => {
               unitLabel="°C"
               asOf={metricsRefreshedAt}
               severity={gpuTemperature ? getRaspiTemperatureSeverity(gpuTemperature) : "normal"}
+            />
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={3} lg={3}>
+          <Paper className={classes.paper}>
+            <MetricCard
+              name="Power"
+              value={powerStatus ?? "--"}
+              unitLabel=""
+              asOf={metricsRefreshedAt}
+              severity={"normal"}
             />
           </Paper>
         </Grid>
