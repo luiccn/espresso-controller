@@ -25,11 +25,11 @@ import (
 )
 
 type Configuration struct {
-	Port               int
-	RelayPin           int
-	BoilerThermCsPin   int
-	BoilerThermClkPin  int
-	BoilerThermMisoPin int
+	Port                   int
+	HeatingElementRelayPin int
+	BoilerThermCsPin       int
+	BoilerThermClkPin      int
+	BoilerThermMisoPin     int
 }
 
 type Server struct {
@@ -57,7 +57,7 @@ func (s *Server) Run() error {
 		return errors.Wrap(err, "initializing gpio access")
 	}
 
-	heatingElem := heating_element.NewHeatingElement(s.c.RelayPin)
+	heatingElem := heating_element.NewHeatingElement(s.c.HeatingElementRelayPin)
 	s.heatingElem = heatingElem
 	heatingElem.Run()
 

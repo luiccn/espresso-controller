@@ -1,6 +1,8 @@
 package temperature
 
 import (
+	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -38,10 +40,9 @@ func NewMonitor(sampler Sampler, sampleRate time.Duration) *Monitor {
 
 func (m *Monitor) Run() {
 	// sample temperature on interval
+	ma := movingaverage.Concurrent(movingaverage.New(10))
 	go func() {
 		for {
-			ma := movingaverage.Concurrent(movingaverage.New(100))
-
 			sample, err := m.sampler.Sample()
 			if err != nil {
 				log.Error("Failed to sample temperature", zap.Error(err))
@@ -49,10 +50,13 @@ func (m *Monitor) Run() {
 				continue
 			}
 
-			ma.Add(float64(sample.Value))
-			avg := float32(ma.Avg())
+			sampleValue := float64(sample.Value)
+			ma.Add(sampleValue)
+			avg := float32(math.Round( ma.Avg() * 10) * 0.1)
 			sample.Value = avg
 
+			log.Info(fmt.Sprintf("avg %f sample %f original sample %f", avg, sample.Value, sampleValue))
+			
 			m.temperatureHistoryMu.Lock()
 			m.temperatureHistory = append(m.temperatureHistory, sample)
 			m.temperatureHistoryMu.Unlock()

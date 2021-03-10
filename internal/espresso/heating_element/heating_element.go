@@ -7,17 +7,17 @@ import (
 )
 
 type HeatingElement struct {
-	relayPin   rpio.Pin
-	dutyFactor float32
+	heatingElementRelayPin rpio.Pin
+	dutyFactor             float32
 }
 
-func NewHeatingElement(relayPinNum int) *HeatingElement {
-	relayPin := rpio.Pin(relayPinNum)
-	relayPin.Output()
+func NewHeatingElement(heatingElementRelayPinNum int) *HeatingElement {
+	heatingElementRelayPin := rpio.Pin(heatingElementRelayPinNum)
+	heatingElementRelayPin.Output()
 
 	return &HeatingElement{
-		relayPin:   relayPin,
-		dutyFactor: 0,
+		heatingElementRelayPin: heatingElementRelayPin,
+		dutyFactor:             0,
 	}
 }
 
@@ -46,13 +46,13 @@ func (h *HeatingElement) SetDutyFactor(factor float32) {
 }
 
 func (h *HeatingElement) on() {
-	h.relayPin.High()
+	h.heatingElementRelayPin.High()
 }
 
 func (h *HeatingElement) off() {
-	h.relayPin.Low()
+	h.heatingElementRelayPin.Low()
 }
 
 func (h *HeatingElement) Shutdown() {
-	h.relayPin.Low()
+	h.heatingElementRelayPin.Low()
 }

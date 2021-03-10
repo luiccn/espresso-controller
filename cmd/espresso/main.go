@@ -12,7 +12,9 @@ import (
 
 var configKeys = []config.Key{
 	{Path: "Port", ShortFlag: "p", Description: "Port on which the espresso server should listen", Default: "8080"},
-	{Path: "RelayPin", ShortFlag: "r", Description: "The GPIO connected to the relay", Default: 14},
+	{Path: "HeatingElementRelayPin", ShortFlag: "r", Description: "The GPIO connected to the heating element relay", Default: 14},
+	{Path: "PowerButtonPin", ShortFlag: "", Description: "The GPIO connected to the power button of the espresso machine", Default: 20},
+	{Path: "PowerButtonRelayPin", ShortFlag: "", Description: "The GPIO connected to the power button relay", Default: 21},
 	{Path: "BoilerThermCsPin", ShortFlag: "", Description: "The GPIO pin connected to the boiler thermometer's max6675 chip select, aka chip enable", Default: 3},
 	{Path: "BoilerThermClkPin", ShortFlag: "", Description: "The GPIO pin connected to the boiler thermometer's max6675 clock", Default: 4},
 	{Path: "BoilerThermMisoPin", ShortFlag: "", Description: "The GPIO pin connected to the boiler thermometer's max6675 data output", Default: 2},
