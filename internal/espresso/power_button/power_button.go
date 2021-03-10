@@ -33,12 +33,12 @@ func NewPowerButton(powerButtonRelayPinNum int, powerButtonPinNum int) *PowerBut
 func (p *PowerButton) Run() {
 	go func() {
 		for {
-			if p.powerButtonPin.Read() == rpio.High && p.machineOn == false {
-				p.PowerOn()
+			if p.isPowerButtonOn() {
+				p.PowerToggle()
 				time.Sleep(1000 * time.Millisecond)
-			} else if p.powerButtonPin.Read() == rpio.High && p.machineOn == true {
-				p.PowerOff()			
-				time.Sleep(1000 * time.Millisecond)
+				for p.isPowerButtonOn() {
+					time.Sleep(1000 * time.Millisecond)
+				}
 			}
 			time.Sleep(500 * time.Millisecond)
 		}
@@ -46,41 +46,49 @@ func (p *PowerButton) Run() {
 }
 
 func (p *PowerButton) PowerOn() {
-	if p.isOff() {
-		p.on()
+	if p.isMachinePowerOff() {
+		p.relayOn()
 	}
 }
 
 func (p *PowerButton) PowerOff() {
-	if p.isOn() {
-		p.off()
+	if p.isMachinePowerOn() {
+		p.relayOff()
 	}
 }
 
 func (p *PowerButton) PowerToggle() {
-	if p.isOn() {
-		p.off()
+	if p.isMachinePowerOn() {
+		p.relayOff()
 	} else {
-		p.on()	
+		p.relayOn()	
 	}
 }
 
-func (p *PowerButton) on() {
+func (p *PowerButton) relayOn() {
 	p.powerButtonRelayPin.High()
 	p.machineOn = true	
 }
 
-func (p *PowerButton) off() {
+func (p *PowerButton) relayOff() {
 	p.powerButtonRelayPin.Low()
 	p.machineOn = false	
 }
 
-func (p *PowerButton) isOn() bool {
+func (p *PowerButton) isPowerButtonOn() bool {
+	return p.powerButtonPin.Read() == rpio.High
+}
+
+func (p *PowerButton) isPowerButtonOff() bool {
+	return !p.isPowerButtonOff()
+}
+
+func (p *PowerButton) isMachinePowerOn() bool {
 	return p.powerButtonRelayPin.Read() == rpio.High && p.machineOn == true
 }
 
-func (p *PowerButton) isOff() bool {
-	return !p.isOn()
+func (p *PowerButton) isMachinePowerOff() bool {
+	return !p.isMachinePowerOn()
 }
 
 func (p *PowerButton) Shutdown() {
