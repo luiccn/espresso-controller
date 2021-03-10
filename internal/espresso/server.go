@@ -3,6 +3,7 @@ package espresso
 import (
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -102,6 +103,26 @@ func (s *Server) Run() error {
 	}
 }
 
+func (s *Server) powerButtonOnQueryHandler(w http.ResponseWriter, r *http.Request) {
+	log.Info(r.Method + r.RequestURI)
+	if r.Method == "POST" {
+		s.powerButton.PowerOn()
+		w.WriteHeader(200)
+	} else {
+		w.WriteHeader(404)
+	}
+}
+
+func (s *Server) powerButtonOffQueryHandler(w http.ResponseWriter, r *http.Request) {
+	log.Info(r.Method + r.RequestURI)
+	if r.Method == "POST" {
+		s.powerButton.PowerOff()
+		w.WriteHeader(200)
+	} else {
+		w.WriteHeader(404)
+	}
+}
+
 func (s *Server) serveTCP() error {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", s.c.Port))
 	if err != nil {
@@ -114,6 +135,9 @@ func (s *Server) serveTCP() error {
 	mux := cmux.New(listener)
 	grpcListener := mux.MatchWithWriters(cmux.HTTP2MatchHeaderFieldPrefixSendSettings("content-type", "application/grpc"))
 	http1Listener := mux.Match(cmux.HTTP1())
+
+	http.HandleFunc("/power_button/on", s.powerButtonOnQueryHandler)
+	http.HandleFunc("/power_button/off", s.powerButtonOffQueryHandler)
 
 	eg := errgroup.Group{}
 	eg.Go(func() error { return s.serveGRPC(grpcListener, s.grpcServer) })
@@ -136,7 +160,7 @@ func (s *Server) serveGRPC(listener net.Listener, grpcServer *grpc.Server) error
 func (s *Server) serveHTTP1(listener net.Listener, grpcServer *grpc.Server) error {
 	log.Info("Initializing gRPC web server", zap.Int("port", s.c.Port))
 	server := NewGRPCWebServer(grpcServer)
-	if err := server.Listen(listener, true /*TODO*/); err != nil {
+	if err := server.Listen(listener, true /*TODO*/, s.powerButton); err != nil {
 		log.Error("gRPC web server failed", zap.Error(err))
 		return errors.Wrap(err, "gRPC web server failed")
 	}

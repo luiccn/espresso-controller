@@ -1,7 +1,6 @@
 package temperature
 
 import (
-	"fmt"
 	"math"
 	"sync"
 	"time"
@@ -53,10 +52,7 @@ func (m *Monitor) Run() {
 
 			sampleValue := float64(sample.Value)
 			ma.Add(sampleValue)
-			avg := float32(math.Round( ma.Avg() * 10) * 0.1)
-			sample.Value = avg
-
-			log.Info(fmt.Sprintf("avg %f sample %f original sample %f", avg, sample.Value, sampleValue))
+			sample.Value = float32(math.Round( ma.Avg() * 10) * 0.1)
 			
 			m.temperatureHistoryMu.Lock()
 			m.temperatureHistory = append(m.temperatureHistory, sample)

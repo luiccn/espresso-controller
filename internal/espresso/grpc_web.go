@@ -8,6 +8,7 @@ import (
 
 	"github.com/gregorychen3/espresso-controller/internal/log"
 	"github.com/gregorychen3/espresso-controller/internal/metrics"
+	"github.com/gregorychen3/espresso-controller/internal/espresso/power_button"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -57,7 +58,7 @@ func NewGRPCWebServer(server *grpc.Server) *GRPCWebServer {
 	}
 }
 
-func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool) error {
+func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powerButton *power_button.PowerButton) error {
 	loggerMiddleware := NewProdLoggerMiddleware
 	if enableDevLogger {
 		loggerMiddleware = middleware.Logger
@@ -80,7 +81,16 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool) erro
 
 	router.Get("/test", func(writer http.ResponseWriter, req *http.Request) {
 		writer.WriteHeader(200)
-		writer.Write([]byte("Ok"))
+		writer.Write([]byte("Ok\n"))
+	})
+
+	router.Post("/power_button/on", func(writer http.ResponseWriter, req *http.Request) {
+		powerButton.PowerOn()
+		writer.WriteHeader(200)
+	})
+	router.Post("/power_button/off", func(writer http.ResponseWriter, req *http.Request) {
+		powerButton.PowerOff()
+		writer.WriteHeader(200)
 	})
 
 	router.Handle("/metrics", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
