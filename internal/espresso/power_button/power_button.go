@@ -48,23 +48,31 @@ func (p *PowerButton) Run() {
 func (p *PowerButton) PowerOn() {
 	if p.isOff() {
 		p.on()
-		p.machineOn = true	
 	}
 }
 
 func (p *PowerButton) PowerOff() {
 	if p.isOn() {
 		p.off()
-		p.machineOn = false	
+	}
+}
+
+func (p *PowerButton) PowerToggle() {
+	if p.isOn() {
+		p.off()
+	} else {
+		p.on()	
 	}
 }
 
 func (p *PowerButton) on() {
 	p.powerButtonRelayPin.High()
+	p.machineOn = true	
 }
 
 func (p *PowerButton) off() {
 	p.powerButtonRelayPin.Low()
+	p.machineOn = false	
 }
 
 func (p *PowerButton) isOn() bool {

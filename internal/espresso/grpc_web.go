@@ -92,6 +92,10 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 		powerButton.PowerOff()
 		writer.WriteHeader(200)
 	})
+	router.Post("/power_button/toggle", func(writer http.ResponseWriter, req *http.Request) {
+		powerButton.PowerToggle()
+		writer.WriteHeader(200)
+	})
 
 	router.Handle("/metrics", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		metrics.CollectSystemMetrics()
