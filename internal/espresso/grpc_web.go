@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gregorychen3/espresso-controller/internal/espresso/power_button"
+	"github.com/gregorychen3/espresso-controller/internal/espresso/power_manager"
 	"github.com/gregorychen3/espresso-controller/internal/log"
 	"github.com/gregorychen3/espresso-controller/internal/metrics"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
@@ -59,7 +59,7 @@ func NewGRPCWebServer(server *grpc.Server) *GRPCWebServer {
 	}
 }
 
-func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powerButton *power_button.PowerButton) error {
+func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powerManager *power_manager.PowerManager) error {
 	loggerMiddleware := NewProdLoggerMiddleware
 	if enableDevLogger {
 		loggerMiddleware = middleware.Logger
@@ -86,17 +86,17 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 	})
 
 	router.Post("/power_button/on", func(writer http.ResponseWriter, req *http.Request) {
-		powerButton.PowerOn()
+		powerManager.PowerOn()
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(200)
 	})
 	router.Post("/power_button/off", func(writer http.ResponseWriter, req *http.Request) {
-		powerButton.PowerOff()
+		powerManager.PowerOff()
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(200)
 	})
 	router.Post("/power_button/toggle", func(writer http.ResponseWriter, req *http.Request) {
-		powerButton.PowerToggle()
+		powerManager.PowerToggle()
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(200)
 	})
@@ -109,7 +109,7 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(200)
 
-		if powerButton.IsMachinePowerOn() {
+		if powerManager.IsMachinePowerOn() {
 			j, _ := json.Marshal(&response{Status: "ON"})
 			writer.Write(j)
 		} else {

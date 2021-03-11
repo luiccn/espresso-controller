@@ -3,7 +3,6 @@ package espresso
 import (
 	"fmt"
 	"net"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/gregorychen3/espresso-controller/internal/espresso/heating_element"
 	"github.com/gregorychen3/espresso-controller/internal/espresso/power_button"
+	"github.com/gregorychen3/espresso-controller/internal/espresso/power_manager"
 	"github.com/gregorychen3/espresso-controller/internal/espresso/temperature"
 	"github.com/gregorychen3/espresso-controller/internal/espresso/temperature/max6675"
 	"github.com/gregorychen3/espresso-controller/internal/log"
@@ -42,7 +42,7 @@ type Server struct {
 	grpcEspressoServer espressopb.EspressoServer
 	grpcServer         *grpc.Server
 
-	powerButton *power_button.PowerButton
+	powerManager *power_manager.PowerManager
 
 	heatingElem *heating_element.HeatingElement
 
@@ -64,8 +64,11 @@ func (s *Server) Run() error {
 	}
 
 	powerButton := power_button.NewPowerButton(s.c.PowerButtonRelayPin, s.c.PowerButtonPin)
-	s.powerButton = powerButton
 	powerButton.Run()
+
+	powerManager := power_manager.NewPowerManager(powerButton, power_manager.PowerSchedule{}, time.Hour)
+	s.powerManager = powerManager
+	powerManager.Run()
 
 	heatingElem := heating_element.NewHeatingElement(s.c.HeatingElementRelayPin)
 	s.heatingElem = heatingElem
@@ -103,26 +106,6 @@ func (s *Server) Run() error {
 	}
 }
 
-func (s *Server) powerButtonOnQueryHandler(w http.ResponseWriter, r *http.Request) {
-	log.Info(r.Method + r.RequestURI)
-	if r.Method == "POST" {
-		s.powerButton.PowerOn()
-		w.WriteHeader(200)
-	} else {
-		w.WriteHeader(404)
-	}
-}
-
-func (s *Server) powerButtonOffQueryHandler(w http.ResponseWriter, r *http.Request) {
-	log.Info(r.Method + r.RequestURI)
-	if r.Method == "POST" {
-		s.powerButton.PowerOff()
-		w.WriteHeader(200)
-	} else {
-		w.WriteHeader(404)
-	}
-}
-
 func (s *Server) serveTCP() error {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", s.c.Port))
 	if err != nil {
@@ -135,9 +118,6 @@ func (s *Server) serveTCP() error {
 	mux := cmux.New(listener)
 	grpcListener := mux.MatchWithWriters(cmux.HTTP2MatchHeaderFieldPrefixSendSettings("content-type", "application/grpc"))
 	http1Listener := mux.Match(cmux.HTTP1())
-
-	http.HandleFunc("/power_button/on", s.powerButtonOnQueryHandler)
-	http.HandleFunc("/power_button/off", s.powerButtonOffQueryHandler)
 
 	eg := errgroup.Group{}
 	eg.Go(func() error { return s.serveGRPC(grpcListener, s.grpcServer) })
@@ -160,7 +140,7 @@ func (s *Server) serveGRPC(listener net.Listener, grpcServer *grpc.Server) error
 func (s *Server) serveHTTP1(listener net.Listener, grpcServer *grpc.Server) error {
 	log.Info("Initializing gRPC web server", zap.Int("port", s.c.Port))
 	server := NewGRPCWebServer(grpcServer)
-	if err := server.Listen(listener, true /*TODO*/, s.powerButton); err != nil {
+	if err := server.Listen(listener, true /*TODO*/, s.powerManager); err != nil {
 		log.Error("gRPC web server failed", zap.Error(err))
 		return errors.Wrap(err, "gRPC web server failed")
 	}
@@ -178,7 +158,7 @@ func (s *Server) watchSignals() {
 func (s *Server) Shutdown() error {
 	log.Info("Shutting down heating element relay")
 	s.heatingElem.Shutdown()
-	s.powerButton.Shutdown()
+	s.powerManager.Shutdown()
 
 	log.Info("Unmapping gpio memory")
 	if err := rpio.Close(); err != nil {
