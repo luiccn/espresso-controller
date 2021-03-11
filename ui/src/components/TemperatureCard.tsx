@@ -1,4 +1,4 @@
-import { Button, Grid, Paper } from "@material-ui/core";
+import { Grid, Paper } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import React from "react";
@@ -8,12 +8,18 @@ import { selectConfiguration } from "../redux/configurationSlice";
 import { setConfigureDialogVisibility } from "../redux/uiSlice";
 import Title from "./Title";
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
+  paper: {
+    padding: theme.spacing(2),
+    display: "flex",
+    overflow: "auto",
+    flexDirection: "column",
+  },
   temperatureContext: {
     flex: 1,
   },
   setTargetTempButton: { textAlign: "center" },
-});
+}));
 
 export default function TemperatureCard() {
   const d = useDispatch();
@@ -27,9 +33,8 @@ export default function TemperatureCard() {
   return (
     <>
 
-      <Grid container spacing={1} >
         <Grid item xs={6}>
-          <Paper>
+          <Paper className={classes.paper}>
             <Title>Boiler 🌡️</Title>
             <Typography variant="h4" color="primary">
               {curTemp?.value.toFixed(2) ?? "--"} °C
@@ -43,7 +48,7 @@ export default function TemperatureCard() {
         </Grid>
 
         <Grid item xs={6}>
-          <Paper>
+          <Paper className={classes.paper} onClick={handleConfigureClicked}>
             <Title>Target 🌡️</Title>
             <Typography variant="h4" color="primary">
               {configuration?.targetTemp.value} °C
@@ -53,14 +58,6 @@ export default function TemperatureCard() {
             </Typography>
           </Paper>
         </Grid>
-        <Grid item xs={12}>
-          <Paper className={classes.setTargetTempButton}>
-            <Button variant="contained" color="primary" size="small" onClick={handleConfigureClicked}>
-              CONFIGURE PID
-          </Button>
-          </Paper>
-        </Grid>
-      </Grid>
     </>
   );
 }

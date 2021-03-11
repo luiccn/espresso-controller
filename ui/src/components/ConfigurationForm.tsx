@@ -61,13 +61,13 @@ export default function ConfigurationForm() {
           </Grid>
           <Grid item xs={8} />
           <Grid item xs={4}>
-            <NumberField name="p" label="Proportional Term" />
+            <NumberField name="p" label="P" />
           </Grid>
           <Grid item xs={4}>
-            <NumberField name="i" label="Integral Term" />
+            <NumberField name="i" label="I" />
           </Grid>
           <Grid item xs={4}>
-            <NumberField name="d" label="Derivative Term" />
+            <NumberField name="d" label="D" />
           </Grid>
         </Grid>
       </Form>

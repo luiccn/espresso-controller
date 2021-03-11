@@ -14,7 +14,7 @@ import { showConfigDialog } from "../redux/selectors";
 import { endBoilerTemperatureStream, startBoilerTemperatureStream } from "../redux/boilerTemperatureSlice";
 import { getConfiguration } from "../redux/configurationSlice";
 
-const metricsRefreshIntervalMillis = 8000;
+const metricsRefreshIntervalMillis = 2000;
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -40,7 +40,7 @@ export default () => {
   const d = useDispatch();
 
   interface PowerStatus {
-    Status : string
+    Status: string
   }
 
   //
@@ -63,14 +63,14 @@ export default () => {
   // const [cpuUtilization, setCpuUtilization] = useState<number | undefined>();
   // const [memUtilization, setMemUtilization] = useState<number | undefined>();
   // const [gpuTemperature, setGpuTemperature] = useState<number | undefined>();
-  
+
   const refreshMetrics = async () => {
     const metricsResp = await fetch("/metrics");
     const metricsRaw = await metricsResp.text();
-    
+
     const powerResp = await fetch("/power_button/status");
     const power = await powerResp.json() as PowerStatus;
-    
+
     const metricsMap: { [key: string]: Metric } = parsePromText(metricsRaw).reduce((acc, cur) => {
       return { ...acc, [cur.name]: cur };
     }, {});
@@ -108,8 +108,8 @@ export default () => {
   };
 
   function toggle() {
-    const requestOptions = {method: 'POST'};
-     fetch("/power_button/toggle", requestOptions).catch(() => {});
+    const requestOptions = { method: 'POST' };
+    fetch("/power_button/toggle", requestOptions).catch(() => { });
   }
 
   return (
@@ -139,50 +139,13 @@ export default () => {
               value={powerStatus ?? "--"}
               unitLabel=""
               asOf={metricsRefreshedAt}
-              severity={ powerStatus === "ON" ? "success" : "warning"  }
+              severity={powerStatus === "ON" ? "success" : "warning"}
             />
-          </Paper>
-        </Grid>
-        <Grid item xs={12}>
-          <Paper className={classes.paper}>
-            <TemperatureCard />
           </Paper>
         </Grid>
 
-        {/* <Grid item xs={12} md={3} lg={3}>
-          <Paper className={classes.paper}>
-            <MetricCard
-              name="CPU Usage"
-              value={cpuUtilization?.toFixed(2) ?? "--"}
-              unitLabel="%"
-              asOf={metricsRefreshedAt}
-              severity={"normal"}
-            />
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={3} lg={3}>
-          <Paper className={classes.paper}>
-            <MetricCard
-              name="Memory Usage"
-              value={memUtilization?.toFixed(2) ?? "--"}
-              unitLabel="%"
-              asOf={metricsRefreshedAt}
-              severity={"normal"}
-            />
-          </Paper>
-        </Grid> */}
-        {/* <Grid item xs={12} md={3} lg={3}>
-          <Paper className={classes.paper}>
-            <MetricCard
-              name="GPU Temperature"
-              value={gpuTemperature?.toFixed(2) ?? "--"}
-              unitLabel="°C"
-              asOf={metricsRefreshedAt}
-              severity={gpuTemperature ? getRaspiTemperatureSeverity(gpuTemperature) : "normal"}
-            />
-          </Paper>
-        </Grid> */}
-   
+        <TemperatureCard />
+
       </Grid>
     </>
   );
