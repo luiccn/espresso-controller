@@ -145,6 +145,15 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 		writer.Write(j)
 	})
 
+	router.Get("/power_button/status-reason", func(writer http.ResponseWriter, req *http.Request) {
+
+		writer.Header().Add("Content-Type", "application/json")
+		writer.WriteHeader(200)
+		
+		j, _ := json.Marshal(&powerManager.Status)
+		writer.Write(j)
+	})
+
 	router.Handle("/metrics", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		metrics.CollectSystemMetrics()
 		promhttp.Handler().ServeHTTP(w, req)

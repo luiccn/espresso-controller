@@ -75,7 +75,7 @@ func (s *Server) Run() error {
 
 
 
-	powerManager := power_manager.NewPowerManager(power_manager.PowerSchedule{ Frames: a }, time.Minute, s.c.PowerButtonRelayPin, s.c.PowerButtonPin, s.c.PowerLedPin)
+	powerManager := power_manager.NewPowerManager(power_manager.PowerSchedule{ Frames: a }, 60 * time.Minute, s.c.PowerButtonRelayPin, s.c.PowerButtonPin, s.c.PowerLedPin)
 	s.powerManager = powerManager
 	powerManager.Run()
 
