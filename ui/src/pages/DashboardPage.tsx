@@ -108,6 +108,7 @@ export default () => {
   };
 
   function toggle() {
+    setPowerStatus("🤔")
     const requestOptions = { method: 'POST' };
     fetch("/power_button/toggle", requestOptions).catch(() => { });
   }

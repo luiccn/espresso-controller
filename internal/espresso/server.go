@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gregorychen3/espresso-controller/internal/espresso/heating_element"
-	"github.com/gregorychen3/espresso-controller/internal/espresso/power_button"
 	"github.com/gregorychen3/espresso-controller/internal/espresso/power_manager"
 	"github.com/gregorychen3/espresso-controller/internal/espresso/temperature"
 	"github.com/gregorychen3/espresso-controller/internal/espresso/temperature/max6675"
@@ -63,10 +62,19 @@ func (s *Server) Run() error {
 		return errors.Wrap(err, "initializing gpio access")
 	}
 
-	powerButton := power_button.NewPowerButton(s.c.PowerButtonRelayPin, s.c.PowerButtonPin)
-	powerButton.Run()
+	a := make(map[time.Weekday][]power_manager.PowerOnInterval)
 
-	powerManager := power_manager.NewPowerManager(powerButton, power_manager.PowerSchedule{}, time.Hour)
+	poi := make([]power_manager.PowerOnInterval,1)
+	poi[0] = power_manager.PowerOnInterval{From: 7, To: 9}
+	//a[time.Thursday] = poi
+
+	poi2 := make([]power_manager.PowerOnInterval,1)
+	poi2[0] = power_manager.PowerOnInterval{From: 11, To: 12}
+	//a[time.Friday] = poi2
+
+
+
+	powerManager := power_manager.NewPowerManager(power_manager.PowerSchedule{ Frames: a }, time.Minute, s.c.PowerButtonRelayPin, s.c.PowerButtonPin)
 	s.powerManager = powerManager
 	powerManager.Run()
 

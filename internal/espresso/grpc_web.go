@@ -118,6 +118,33 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 		}
 	})
 
+	router.Get("/power_button/schedule", func(writer http.ResponseWriter, req *http.Request) {
+
+		writer.Header().Add("Content-Type", "application/json")
+		writer.WriteHeader(200)
+		
+		j, _ := json.Marshal(&powerManager.PowerSchedule)
+		writer.Write(j)
+	})
+
+	router.Get("/power_button/on-schedule", func(writer http.ResponseWriter, req *http.Request) {
+
+		writer.Header().Add("Content-Type", "application/json")
+		writer.WriteHeader(200)
+		
+		j, _ := json.Marshal(&powerManager.ScheduleOn)
+		writer.Write(j)
+	})
+
+	router.Get("/power_button/on-since", func(writer http.ResponseWriter, req *http.Request) {
+
+		writer.Header().Add("Content-Type", "application/json")
+		writer.WriteHeader(200)
+		
+		j, _ := json.Marshal(&powerManager.OnSince)
+		writer.Write(j)
+	})
+
 	router.Handle("/metrics", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		metrics.CollectSystemMetrics()
 		promhttp.Handler().ServeHTTP(w, req)
