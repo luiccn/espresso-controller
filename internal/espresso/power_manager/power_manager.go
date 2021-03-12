@@ -21,19 +21,23 @@ type PowerManager struct {
 	OnSince             time.Time
 	powerButtonRelayPin rpio.Pin
 	powerButtonPin      rpio.Pin
+	powerLedPin         rpio.Pin
 	machineOn           bool
 }
 
-func NewPowerManager(powerSchedule PowerSchedule, autoOffDuration time.Duration, powerButtonRelayPinNum int, powerButtonPinNum int) *PowerManager {
+func NewPowerManager(powerSchedule PowerSchedule, autoOffDuration time.Duration, powerButtonRelayPinNum int, powerButtonPinNum int, powerLedPinNum int) *PowerManager {
 
 	powerButtonRelayPin := rpio.Pin(powerButtonRelayPinNum)
-	powerButtonPin := rpio.Pin(powerButtonPinNum)
-
+	
 	powerButtonRelayPin.Output()
-	powerButtonRelayPin.Pull(rpio.PullDown)
-
+	
+	powerButtonPin := rpio.Pin(powerButtonPinNum)
+	
 	powerButtonPin.Input()
 	powerButtonPin.PullDown()
+	
+	powerLedPin := rpio.Pin(powerLedPinNum)
+	powerLedPin.Output()
 
 	return &PowerManager{
 		PowerSchedule:       powerSchedule,
@@ -42,6 +46,7 @@ func NewPowerManager(powerSchedule PowerSchedule, autoOffDuration time.Duration,
 		OnSince:             time.Time{},
 		powerButtonRelayPin: powerButtonRelayPin,
 		powerButtonPin:      powerButtonPin,
+		powerLedPin:         powerLedPin,
 		machineOn:           false,
 	}
 }
@@ -102,6 +107,7 @@ func (p *PowerManager) SetSchedule(newPowerSchedule PowerSchedule) {
 func (p *PowerManager) PowerOn() {
 	if p.IsMachinePowerOff() {
 		p.powerButtonRelayPin.High()
+		p.powerLedPin.High()
 		p.machineOn = true
 	}
 	p.OnSince = time.Now()
@@ -110,6 +116,7 @@ func (p *PowerManager) PowerOn() {
 func (p *PowerManager) PowerOff() {
 	if p.IsMachinePowerOn() {
 		p.powerButtonRelayPin.Low()
+		p.powerLedPin.Low()
 		p.machineOn = false
 	}
 	p.OnSince = time.Time{}

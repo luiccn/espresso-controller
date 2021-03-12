@@ -30,6 +30,7 @@ type Configuration struct {
 	HeatingElementRelayPin int
 	PowerButtonRelayPin    int
 	PowerButtonPin         int
+	PowerLedPin            int
 	BoilerThermCsPin       int
 	BoilerThermClkPin      int
 	BoilerThermMisoPin     int
@@ -74,7 +75,7 @@ func (s *Server) Run() error {
 
 
 
-	powerManager := power_manager.NewPowerManager(power_manager.PowerSchedule{ Frames: a }, time.Minute, s.c.PowerButtonRelayPin, s.c.PowerButtonPin)
+	powerManager := power_manager.NewPowerManager(power_manager.PowerSchedule{ Frames: a }, time.Minute, s.c.PowerButtonRelayPin, s.c.PowerButtonPin, s.c.PowerLedPin)
 	s.powerManager = powerManager
 	powerManager.Run()
 
