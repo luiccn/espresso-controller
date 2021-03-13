@@ -3,6 +3,7 @@ module github.com/gregorychen3/espresso-controller
 go 1.14
 
 require (
+	github.com/RobinUS2/golang-moving-average v1.0.0
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/go-chi/chi v4.1.0+incompatible
@@ -12,6 +13,7 @@ require (
 	github.com/golang/protobuf v1.3.5
 	github.com/google/uuid v1.1.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0
+	github.com/hako/durafmt v0.0.0-20200710122514-c0fb7b4da026 // indirect
 	github.com/improbable-eng/grpc-web v0.12.0
 	github.com/karrick/godirwalk v1.15.6 // indirect
 	github.com/pkg/errors v0.8.1
@@ -34,6 +36,5 @@ require (
 	google.golang.org/genproto v0.0.0-20200409111301-baae70f3302d // indirect
 	google.golang.org/grpc v1.27.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
-	github.com/RobinUS2/golang-moving-average v1.0.0
 
 )

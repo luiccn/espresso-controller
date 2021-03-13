@@ -21,9 +21,17 @@ type PowerManager struct {
 	powerButtonPin  rpio.Pin
 	powerLedPin     rpio.Pin
 	OnSince         time.Time
-	machineOn       bool
 	ScheduleOn      bool
-	Status          string
+	LastInteraction string
+}
+
+type PowerManagerStatus struct {
+	PowerSchedule   PowerSchedule
+	AutoOffDuration time.Duration
+	OnSince         time.Time
+	ScheduleOn      bool
+	LastInteraction string
+	PowerOn         bool
 }
 
 func NewPowerManager(powerSchedule PowerSchedule, autoOffDuration time.Duration, powerRelayPinNum int, powerButtonPinNum int, powerLedPinNum int) *PowerManager {
@@ -40,7 +48,6 @@ func NewPowerManager(powerSchedule PowerSchedule, autoOffDuration time.Duration,
 	powerLedPin := rpio.Pin(powerLedPinNum)
 	powerLedPin.Output()
 	powerLedPin.Low()
-	
 
 	return &PowerManager{
 		PowerSchedule:   powerSchedule,
@@ -50,8 +57,7 @@ func NewPowerManager(powerSchedule PowerSchedule, autoOffDuration time.Duration,
 		powerRelayPin:   powerRelayPin,
 		powerButtonPin:  powerButtonPin,
 		powerLedPin:     powerLedPin,
-		machineOn:       false,
-		Status:          "Start-up Off",
+		LastInteraction: "Start-up Off",
 	}
 }
 
@@ -64,23 +70,23 @@ func (p *PowerManager) Run() {
 			if p.inSchedule(currentTime) {
 				p.PowerOn()
 				p.ScheduleOn = true
-				p.Status = "Scheduled"
+				p.LastInteraction = "Scheduled"
 			} else {
 				if p.ScheduleOn && p.IsMachinePowerOn() {
 					p.PowerOff()
 					p.ScheduleOn = false
-					p.Status = "Off"
+					p.LastInteraction = "Off"
 				}
 			}
 
 			if !p.OnSince.Equal(time.Time{}) && time.Now().Sub(p.OnSince) >= p.AutoOffDuration && !p.ScheduleOn {
 				p.PowerOff()
-				p.Status = "Auto-off"
+				p.LastInteraction = "Auto-off"
 			}
 
 			if p.isPowerButtonOn() {
 				p.PowerToggle()
-				p.Status = "Button Press"
+				p.LastInteraction = "Button Press"
 				time.Sleep(1000 * time.Millisecond)
 				for p.isPowerButtonOn() {
 					time.Sleep(1000 * time.Millisecond)
@@ -90,6 +96,63 @@ func (p *PowerManager) Run() {
 			time.Sleep(500 * time.Millisecond)
 		}
 	}()
+}
+
+func (p *PowerManager) GetStatus() PowerManagerStatus {
+	return PowerManagerStatus{
+		PowerSchedule:   p.PowerSchedule,
+		AutoOffDuration: p.AutoOffDuration,
+		OnSince:         p.OnSince,
+		ScheduleOn:      p.ScheduleOn,
+		LastInteraction: p.LastInteraction,
+		PowerOn:         p.IsMachinePowerOn(),
+	}
+}
+
+func (p *PowerManager) SetSchedule(newPowerSchedule PowerSchedule) {
+	p.PowerSchedule = newPowerSchedule
+}
+
+func (p *PowerManager) PowerOn() {
+	if p.IsMachinePowerOff() {
+		p.powerRelayPin.High()
+		p.powerLedPin.High()
+		p.OnSince = time.Now()
+		p.LastInteraction = "Power On Call"
+	}
+}
+
+func (p *PowerManager) PowerOff() {
+	if p.IsMachinePowerOn() {
+		p.powerRelayPin.Low()
+		p.powerLedPin.Low()
+		p.OnSince = time.Time{}
+		p.LastInteraction = "Power Off Call"
+	}
+}
+
+func (p *PowerManager) PowerToggle() {
+	if p.IsMachinePowerOn() {
+		p.PowerOff()
+	} else {
+		p.PowerOn()
+	}
+}
+
+func (p *PowerManager) IsMachinePowerOn() bool {
+	return p.powerRelayPin.Read() == rpio.High
+}
+
+func (p *PowerManager) IsMachinePowerOff() bool {
+	return !p.IsMachinePowerOn()
+}
+
+func (p *PowerManager) isPowerButtonOn() bool {
+	return p.powerButtonPin.Read() == rpio.High
+}
+
+func (p *PowerManager) isPowerButtonOff() bool {
+	return !p.isPowerButtonOff()
 }
 
 func (p *PowerManager) inSchedule(currentTime time.Time) bool {
@@ -106,54 +169,6 @@ func (p *PowerManager) inSchedule(currentTime time.Time) bool {
 	}
 
 	return false
-}
-
-func (p *PowerManager) SetSchedule(newPowerSchedule PowerSchedule) {
-	p.PowerSchedule = newPowerSchedule
-}
-
-func (p *PowerManager) PowerOn() {
-	if p.IsMachinePowerOff() {
-		p.powerRelayPin.High()
-		p.powerLedPin.High()
-		p.machineOn = true
-		p.OnSince = time.Now()
-		p.Status = "Power On Call"
-	}
-}
-
-func (p *PowerManager) PowerOff() {
-	if p.IsMachinePowerOn() {
-		p.powerRelayPin.Low()
-		p.powerLedPin.Low()
-		p.machineOn = false
-		p.OnSince = time.Time{}
-		p.Status = "Power Off Call"
-	}
-}
-
-func (p *PowerManager) PowerToggle() {
-	if p.IsMachinePowerOn() {
-		p.PowerOff()
-	} else {
-		p.PowerOn()
-	}
-}
-
-func (p *PowerManager) IsMachinePowerOn() bool {
-	return p.powerRelayPin.Read() == rpio.High && p.machineOn == true
-}
-
-func (p *PowerManager) IsMachinePowerOff() bool {
-	return !p.IsMachinePowerOn()
-}
-
-func (p *PowerManager) isPowerButtonOn() bool {
-	return p.powerButtonPin.Read() == rpio.High
-}
-
-func (p *PowerManager) isPowerButtonOff() bool {
-	return !p.isPowerButtonOff()
 }
 
 func (p *PowerManager) Shutdown() {

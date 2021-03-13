@@ -10,6 +10,7 @@ import (
 	"github.com/gregorychen3/espresso-controller/internal/espresso/power_manager"
 	"github.com/gregorychen3/espresso-controller/internal/log"
 	"github.com/gregorychen3/espresso-controller/internal/metrics"
+	"github.com/hako/durafmt"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -80,77 +81,53 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 		}).Handler,
 	)
 
-	router.Get("/test", func(writer http.ResponseWriter, req *http.Request) {
-		writer.WriteHeader(200)
-		writer.Write([]byte("Ok\n"))
-	})
-
-	router.Post("/power_button/on", func(writer http.ResponseWriter, req *http.Request) {
+	router.Post("/power/on", func(writer http.ResponseWriter, req *http.Request) {
 		powerManager.PowerOn()
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(200)
 	})
-	router.Post("/power_button/off", func(writer http.ResponseWriter, req *http.Request) {
+	router.Post("/power/off", func(writer http.ResponseWriter, req *http.Request) {
 		powerManager.PowerOff()
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(200)
 	})
-	router.Post("/power_button/toggle", func(writer http.ResponseWriter, req *http.Request) {
+	router.Post("/power/toggle", func(writer http.ResponseWriter, req *http.Request) {
 		powerManager.PowerToggle()
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(200)
 	})
-	router.Get("/power_button/status", func(writer http.ResponseWriter, req *http.Request) {
+	router.Get("/power/status", func(writer http.ResponseWriter, req *http.Request) {
 
-		type response struct {
-			Status string
+		type PowerManagerStatus struct {
+			PowerSchedule   power_manager.PowerSchedule
+			AutoOffDuration string
+			OnSince         string
+			ScheduleOn      bool
+			LastInteraction string
+			PowerOn         bool
 		}
 
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(200)
 
-		if powerManager.IsMachinePowerOn() {
-			j, _ := json.Marshal(&response{Status: "ON"})
-			writer.Write(j)
+		ps := powerManager.GetStatus()
+		var onSince time.Duration
+		if ps.OnSince.Equal(time.Time{}) {
+			onSince = time.Time{}.Sub(time.Time{})
 		} else {
-			j, _ := json.Marshal(&response{Status: "OFF"})
-			writer.Write(j)
+			onSince = time.Now().Sub(ps.OnSince)
 		}
-	})
 
-	router.Get("/power_button/schedule", func(writer http.ResponseWriter, req *http.Request) {
+		humanPowerStatus := PowerManagerStatus{
+			PowerSchedule:   ps.PowerSchedule,
+			AutoOffDuration: durafmt.Parse(ps.AutoOffDuration).String(),
+			OnSince:         durafmt.Parse(onSince).LimitFirstN(2).String(),
+			ScheduleOn:      ps.ScheduleOn,
+			LastInteraction: ps.LastInteraction,
+			PowerOn:         ps.PowerOn,
+		}
 
-		writer.Header().Add("Content-Type", "application/json")
-		writer.WriteHeader(200)
-		
-		j, _ := json.Marshal(&powerManager.PowerSchedule)
-		writer.Write(j)
-	})
-
-	router.Get("/power_button/on-schedule", func(writer http.ResponseWriter, req *http.Request) {
-
-		writer.Header().Add("Content-Type", "application/json")
-		writer.WriteHeader(200)
-		
-		j, _ := json.Marshal(&powerManager.ScheduleOn)
-		writer.Write(j)
-	})
-
-	router.Get("/power_button/on-since", func(writer http.ResponseWriter, req *http.Request) {
-
-		writer.Header().Add("Content-Type", "application/json")
-		writer.WriteHeader(200)
-		
-		j, _ := json.Marshal(&powerManager.OnSince)
-		writer.Write(j)
-	})
-
-	router.Get("/power_button/status-reason", func(writer http.ResponseWriter, req *http.Request) {
-
-		writer.Header().Add("Content-Type", "application/json")
-		writer.WriteHeader(200)
-		
-		j, _ := json.Marshal(&powerManager.Status)
+		j, _ := json.Marshal(humanPowerStatus)
 		writer.Write(j)
 	})
 

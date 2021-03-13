@@ -1,6 +1,8 @@
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
-import { makeStyles } from "@material-ui/core/styles";
+import Typography from "@material-ui/core/Typography";
+import Chip from '@material-ui/core/Chip';
+import { makeStyles, Box } from "@material-ui/core";
 import moment from "moment";
 import parsePromText, { Metric } from "parse-prometheus-text-format";
 import React, { useEffect, useState } from "react";
@@ -30,6 +32,15 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: "column",
     height: 300,
   },
+  root: {
+    display: 'flex',
+    justifyContent: 'space-evenly',
+    flexDirection: "row",
+    flexWrap: 'wrap',
+    '& > *': {
+      margin: theme.spacing(0.5),
+    }
+  }
 }));
 
 export default () => {
@@ -39,8 +50,14 @@ export default () => {
 
   const d = useDispatch();
 
-  interface PowerStatus {
-    Status: string
+  const [open, setOpen] = React.useState(false);
+
+  function handleOpen() {
+    setOpen(true)
+  }
+
+  function handleClose() {
+    setOpen(false)
   }
 
   //
@@ -58,17 +75,23 @@ export default () => {
   // --------------
   const [metricsRefreshedAt, setMetricsRefreshedAt] = useState<moment.Moment | undefined>();
   const [cpuTemperature, setCpuTemperature] = useState<number | undefined>();
-  const [powerStatus, setPowerStatus] = useState<string | undefined>();
+  const [powerOn, setPowerOn] = useState<string | undefined>();
+  const [powerStatus, setPowerStatus] = useState<PowerStatus | undefined>();
 
-  // const [cpuUtilization, setCpuUtilization] = useState<number | undefined>();
-  // const [memUtilization, setMemUtilization] = useState<number | undefined>();
-  // const [gpuTemperature, setGpuTemperature] = useState<number | undefined>();
+  interface PowerStatus {
+    PowerSchedule: string;
+    AutoOffDuration: number;
+    OnSince: string;
+    ScheduleOn: boolean;
+    LastInteraction: string;
+    PowerOn: boolean;
+  }
 
   const refreshMetrics = async () => {
     const metricsResp = await fetch("/metrics");
     const metricsRaw = await metricsResp.text();
 
-    const powerResp = await fetch("/power_button/status");
+    const powerResp = await fetch("/power/status");
     const power = await powerResp.json() as PowerStatus;
 
     const metricsMap: { [key: string]: Metric } = parsePromText(metricsRaw).reduce((acc, cur) => {
@@ -78,12 +101,9 @@ export default () => {
     setMetricsRefreshedAt(moment());
 
     setCpuTemperature(parseFloat(metricsMap.espresso_raspi_cpu_temperature.metrics[0].value));
-    setPowerStatus(power.Status);
 
-
-    // setCpuUtilization(100 * parseFloat(metricsMap.espresso_raspi_cpu_utilization_ratio.metrics[0].value));
-    // setMemUtilization(100 * parseFloat(metricsMap.espresso_raspi_mem_utilization_ratio.metrics[0].value));
-    // setGpuTemperature(parseFloat(metricsMap.espresso_raspi_gpu_temperature.metrics[0].value));
+    setPowerOn(power.PowerOn ? "ON" : "OFF")
+    setPowerStatus(power)
   };
   useEffect(() => {
     refreshMetrics();
@@ -108,9 +128,9 @@ export default () => {
   };
 
   function toggle() {
-    setPowerStatus("🤔")
+    setPowerOn("🤔")
     const requestOptions = { method: 'POST' };
-    fetch("/power_button/toggle", requestOptions).catch(() => { });
+    fetch("/power/toggle", requestOptions).catch(() => { });
   }
 
   return (
@@ -122,25 +142,56 @@ export default () => {
             <TemperatureChart />
           </Paper>
         </Grid>
-        <Grid item xs={6}>
-          <Paper className={classes.paper}>
-            <MetricCard
-              name="CPU 🌡️"
-              value={cpuTemperature?.toFixed(2) ?? "--"}
-              unitLabel="°C"
-              asOf={metricsRefreshedAt}
-              severity={cpuTemperature ? getRaspiTemperatureSeverity(cpuTemperature) : "normal"}
-            />
-          </Paper>
-        </Grid>
+
+        {!open &&
+          <Grid item xs={6}>
+            <Paper className={classes.paper} onClick={handleOpen}>
+              <MetricCard
+                name="CPU 🌡️"
+                value={cpuTemperature?.toFixed(2) ?? "--"}
+                unitLabel="°C"
+                asOf={metricsRefreshedAt}
+                severity={cpuTemperature ? getRaspiTemperatureSeverity(cpuTemperature) : "normal"}
+              />
+            </Paper>
+          </Grid>
+        }
+        {open &&
+          <Grid item xs={12}>
+            <Paper className={classes.paper} onClick={handleClose}>
+              <Typography variant="h6">
+                <Box color="primary.main">
+                  <div className={classes.root}>
+                    <Box m={2}>
+                      <Chip variant="outlined" color="primary" label={"Schedule:  " + JSON.stringify(powerStatus?.PowerSchedule, null, "\t") ?? "--"} />
+                    </Box>
+                    <Box m={2}>
+                      <Chip variant="outlined" color="primary" label={"Auto-off:  " + powerStatus?.AutoOffDuration ?? "--"} />
+                    </Box>
+                    <Box m={2}>
+                      <Chip variant="outlined" color="primary" label={"Schedule on:  " + (powerStatus?.ScheduleOn ? "true" : "false") ?? "--"} />
+                    </Box>
+                    <Box m={2}>
+                      <Chip variant="outlined" color="primary" label={"On Since  " + powerStatus?.OnSince ?? "--"} />
+                    </Box>
+                    <Box m={2}>
+                      <Chip variant="outlined" color="primary" label={"Last interaction:  " + powerStatus?.LastInteraction ?? "--"} />
+                    </Box>
+                  </div>
+                </Box>
+              </Typography>
+            </Paper>
+          </Grid>
+        }
+
         <Grid item xs={6}>
           <Paper className={classes.paper} onClick={toggle}>
             <MetricCard
               name="Power ⚡"
-              value={powerStatus ?? "--"}
+              value={powerOn ?? "--"}
               unitLabel=""
               asOf={metricsRefreshedAt}
-              severity={powerStatus === "ON" ? "success" : "warning"}
+              severity={powerOn === "ON" ? "success" : "warning"}
             />
           </Paper>
         </Grid>
