@@ -2,6 +2,7 @@ import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import Chip from '@material-ui/core/Chip';
+import Title from "../components/Title";
 import { makeStyles, Box } from "@material-ui/core";
 import moment from "moment";
 import parsePromText, { Metric } from "parse-prometheus-text-format";
@@ -183,16 +184,24 @@ export default () => {
             </Paper>
           </Grid>
         }
-
         <Grid item xs={6}>
           <Paper className={classes.paper} onClick={toggle}>
-            <MetricCard
-              name="Power ⚡"
-              value={powerOn ?? "--"}
-              unitLabel=""
-              asOf={metricsRefreshedAt}
-              severity={powerOn === "ON" ? "success" : "warning"}
-            />
+            <Title>Power ⚡</Title>
+            <Typography variant="h4">
+              <Box color={powerOn === "ON" ? "success.main" : "warning.main"}>
+                {powerOn ?? "--"}
+              </Box>
+            </Typography>
+            {powerStatus?.OnSince !== "0 seconds" && (
+              <Typography color="textSecondary">
+                for {powerStatus?.OnSince}
+              </Typography>
+            )}
+            {powerStatus?.OnSince === "0 seconds" && metricsRefreshedAt && (
+              <Typography color="textSecondary">
+                as of {metricsRefreshedAt.format("HH:mm:ss")}
+              </Typography>
+            )}
           </Paper>
         </Grid>
 
