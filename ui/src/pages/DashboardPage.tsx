@@ -194,7 +194,7 @@ export default () => {
             </Typography>
             {powerStatus?.OnSince !== "0 seconds" && (
               <Typography color="textSecondary">
-                for {powerStatus?.OnSince}
+                for {powerStatus?.OnSince.replace(" milliseconds", " ms").replace(" seconds", " s").replace(" minutes", "m").replace(" hours", "h")}
               </Typography>
             )}
             {powerStatus?.OnSince === "0 seconds" && metricsRefreshedAt && (
