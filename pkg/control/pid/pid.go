@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gregorychen3/espresso-controller/internal/espresso/heating_element"
+	"github.com/gregorychen3/espresso-controller/internal/espresso/power_manager"
 	"github.com/gregorychen3/espresso-controller/internal/espresso/temperature"
 	"github.com/gregorychen3/espresso-controller/internal/fifo"
 	"github.com/gregorychen3/espresso-controller/internal/log"
@@ -31,16 +32,18 @@ type PID struct {
 	targetTemperature  control.TargetTemperature
 	heatingElement     *heating_element.HeatingElement
 	temperatureMonitor *temperature.Monitor
+	powerManager       *power_manager.PowerManager
 	temperatureSubId   uuid.UUID
 }
 
-func NewPid(heatingElem *heating_element.HeatingElement, sampler *temperature.Monitor) (*PID, error) {
+func NewPid(heatingElem *heating_element.HeatingElement, powerManager *power_manager.PowerManager, sampler *temperature.Monitor) (*PID, error) {
 	return &PID{
 		P:                  defaultP,
 		I:                  defaultI,
 		D:                  defaultD,
 		targetTemperature:  control.TargetTemperature{Value: 93, SetAt: time.Now()},
 		heatingElement:     heatingElem,
+		powerManager:       powerManager,
 		temperatureMonitor: sampler,
 	}, nil
 }
@@ -53,36 +56,41 @@ func (c *PID) Run() error {
 		prevSlopes := fifo.NewFIFO(avgSlopeLookback)
 
 		for sample := range subCh {
-			curErr := c.targetTemperature.Value - sample.Value
+			if c.powerManager.IsMachinePowerOn() {
+				curErr := c.targetTemperature.Value - sample.Value
 
-			prevSlopes.Push(prevErrs.Last() - curErr)
-			avgSlope := prevSlopes.Average()
-
-			prevErrs.Push(curErr)
-			errSum := prevErrs.Sum()
-
-			rawOut := (c.P*curErr + c.I*(errSum) - c.D*(avgSlope)) / 100
-
-			var out float32
-			if rawOut <= 0 {
-				out = 0
-			} else if rawOut >= 1 {
-				out = 1
+				prevSlopes.Push(prevErrs.Last() - curErr)
+				avgSlope := prevSlopes.Average()
+	
+				prevErrs.Push(curErr)
+				errSum := prevErrs.Sum()
+	
+				rawOut := (c.P*curErr + c.I*(errSum) - c.D*(avgSlope)) / 100
+	
+				var out float32
+				if rawOut <= 0 {
+					out = 0
+				} else if rawOut >= 1 {
+					out = 1
+				} else {
+					out = rawOut
+				}
+	
+				log.Debug("Setting duty factor",
+					zap.Float32("dutyFactor", out),
+					zap.Float32("curErr", curErr),
+					zap.Float32("errSum", errSum),
+					zap.Float32("avgSlope", avgSlope),
+					zap.Float32("curTemperature", sample.Value),
+					zap.Float32("targetTemperature",
+						c.GetTargetTemperature().Value),
+				)
+				c.heatingElement.SetDutyFactor(out)
 			} else {
-				out = rawOut
+				prevErrs.Clear()
+				prevSlopes.Clear()
+				c.heatingElement.SetDutyFactor(0)
 			}
-
-			log.Debug("Setting duty factor",
-				zap.Float32("dutyFactor", out),
-				zap.Float32("curErr", curErr),
-				zap.Float32("errSum", errSum),
-				zap.Float32("avgSlope", avgSlope),
-				zap.Float32("curTemperature", sample.Value),
-				zap.Float32("targetTemperature",
-					c.GetTargetTemperature().Value),
-			)
-			c.heatingElement.SetDutyFactor(out)
-
 		}
 	}()
 	return nil

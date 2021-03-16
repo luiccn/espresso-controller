@@ -12,6 +12,10 @@ func NewFIFO(maxSize int) FIFO {
 	}
 }
 
+func (f *FIFO) Clear() {
+	f.data = make([]float32, 0, f.maxSize)
+}
+
 func (f *FIFO) Push(val float32) {
 	if len(f.data) < f.maxSize {
 		f.data = append(f.data, val)

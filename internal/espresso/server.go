@@ -89,7 +89,7 @@ func (s *Server) Run() error {
 	)
 	boilerMonitor.Run()
 
-	grpcController, err := newGrpcController(s.c, heatingElem, boilerMonitor, nil)
+	grpcController, err := newGrpcController(s.c, heatingElem, boilerMonitor, nil, powerManager)
 	if err != nil {
 		return err
 	}
