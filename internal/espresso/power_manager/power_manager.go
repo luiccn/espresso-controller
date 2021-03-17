@@ -1,8 +1,9 @@
 package power_manager
 
 import (
-	"github.com/stianeikeland/go-rpio/v4"
 	"time"
+
+	"github.com/stianeikeland/go-rpio/v4"
 )
 
 type PowerOnInterval struct {
@@ -41,7 +42,6 @@ func NewPowerManager(powerSchedule PowerSchedule, autoOffDuration time.Duration,
 	powerRelayPin.Low()
 
 	powerButtonPin := rpio.Pin(powerButtonPinNum)
-
 	powerButtonPin.Input()
 	powerButtonPin.PullDown()
 
@@ -85,17 +85,14 @@ func (p *PowerManager) Run() {
 			}
 
 			if p.isPowerButtonOn() {
-				time.Sleep(100 * time.Millisecond)
-				if p.isPowerButtonOn() {
-					p.PowerToggle()
-					p.LastInteraction = "Button Press"	
-					for p.isPowerButtonOn() {
-						time.Sleep(100 * time.Millisecond)			
-					}
+				for p.isPowerButtonOn() {
+					time.Sleep(100 * time.Millisecond)
 				}
+				p.PowerToggle()
+				p.LastInteraction = "Power Button"
 			}
 
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(200 * time.Millisecond)
 		}
 	}()
 }
@@ -151,10 +148,6 @@ func (p *PowerManager) IsMachinePowerOff() bool {
 
 func (p *PowerManager) isPowerButtonOn() bool {
 	return p.powerButtonPin.Read() == rpio.High
-}
-
-func (p *PowerManager) isPowerButtonOff() bool {
-	return !p.isPowerButtonOff()
 }
 
 func (p *PowerManager) inSchedule(currentTime time.Time) bool {
