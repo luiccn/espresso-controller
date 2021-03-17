@@ -63,19 +63,19 @@ func (s *Server) Run() error {
 		return errors.Wrap(err, "initializing gpio access")
 	}
 
-	a := make(map[time.Weekday][]power_manager.PowerOnInterval)
+	schedule := make(map[time.Weekday][]power_manager.PowerOnInterval)
 
-	poi := make([]power_manager.PowerOnInterval,1)
-	poi[0] = power_manager.PowerOnInterval{From: 7, To: 9}
-	//a[time.Thursday] = poi
+	days := []time.Weekday{time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Friday, time.Saturday, time.Sunday}
 
-	poi2 := make([]power_manager.PowerOnInterval,1)
-	poi2[0] = power_manager.PowerOnInterval{From: 11, To: 12}
-	//a[time.Friday] = poi2
-
-
-
-	powerManager := power_manager.NewPowerManager(power_manager.PowerSchedule{ Frames: a }, 60 * time.Minute, s.c.PowerButtonRelayPin, s.c.PowerButtonPin, s.c.PowerLedPin)
+	for _, d := range days {
+		poi := make([]power_manager.PowerOnInterval,2)
+		poi = append(poi, power_manager.PowerOnInterval{From: 6, To: 8})
+		poi = append(poi, power_manager.PowerOnInterval{From: 11, To: 13})
+		poi = append(poi, power_manager.PowerOnInterval{From: 14, To: 15})
+		schedule[d] = poi
+	}
+	
+	powerManager := power_manager.NewPowerManager(power_manager.PowerSchedule{ Frames: schedule }, 60 * time.Minute, s.c.PowerButtonRelayPin, s.c.PowerButtonPin, s.c.PowerLedPin)
 	s.powerManager = powerManager
 	powerManager.Run()
 
