@@ -85,15 +85,17 @@ func (p *PowerManager) Run() {
 			}
 
 			if p.isPowerButtonOn() {
-				p.PowerToggle()
-				p.LastInteraction = "Button Press"
-				time.Sleep(1000 * time.Millisecond)
-				for p.isPowerButtonOn() {
-					time.Sleep(1000 * time.Millisecond)
+				time.Sleep(100 * time.Millisecond)
+				if p.isPowerButtonOn() {
+					p.PowerToggle()
+					p.LastInteraction = "Button Press"	
+					for p.isPowerButtonOn() {
+						time.Sleep(100 * time.Millisecond)			
+					}
 				}
 			}
 
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
 	}()
 }
