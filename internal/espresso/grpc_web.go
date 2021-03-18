@@ -81,6 +81,17 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 		}).Handler,
 	)
 
+	router.Post("/scheduling/on", func(writer http.ResponseWriter, req *http.Request) {
+		powerManager.PowerOn()
+		writer.Header().Add("Content-Type", "application/json")
+		writer.WriteHeader(200)
+	})
+	router.Post("/scheduling/off", func(writer http.ResponseWriter, req *http.Request) {
+		powerManager.PowerOff()
+		writer.Header().Add("Content-Type", "application/json")
+		writer.WriteHeader(200)
+	})
+
 	router.Post("/power/on", func(writer http.ResponseWriter, req *http.Request) {
 		powerManager.PowerOn()
 		writer.Header().Add("Content-Type", "application/json")
@@ -99,12 +110,12 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 	router.Get("/power/status", func(writer http.ResponseWriter, req *http.Request) {
 
 		type PowerManagerStatus struct {
-			PowerSchedule   power_manager.PowerSchedule
-			AutoOffDuration string
-			OnSince         string
-			ScheduleOn      bool
-			LastInteraction string
-			PowerOn         bool
+			PowerSchedule        power_manager.PowerSchedule
+			AutoOffDuration      string
+			OnSince              string
+			CurrentlyInASchedule bool
+			LastInteraction      string
+			PowerOn              bool
 		}
 
 		writer.Header().Add("Content-Type", "application/json")
@@ -119,12 +130,12 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 		}
 
 		humanPowerStatus := PowerManagerStatus{
-			PowerSchedule:   ps.PowerSchedule,
-			AutoOffDuration: durafmt.Parse(ps.AutoOffDuration).String(),
-			OnSince:         durafmt.Parse(onSince).LimitFirstN(2).String(),
-			ScheduleOn:      ps.ScheduleOn,
-			LastInteraction: ps.LastInteraction,
-			PowerOn:         ps.PowerOn,
+			PowerSchedule:        ps.PowerSchedule,
+			AutoOffDuration:      durafmt.Parse(ps.AutoOffDuration).String(),
+			OnSince:              durafmt.Parse(onSince).LimitFirstN(2).String(),
+			CurrentlyInASchedule: ps.CurrentlyInASchedule,
+			LastInteraction:      ps.LastInteraction,
+			PowerOn:              ps.PowerOn,
 		}
 
 		j, _ := json.Marshal(humanPowerStatus)

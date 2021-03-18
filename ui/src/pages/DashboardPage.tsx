@@ -83,9 +83,10 @@ export default () => {
     PowerSchedule: string;
     AutoOffDuration: number;
     OnSince: string;
-    ScheduleOn: boolean;
+    CurrentlyInASchedule: boolean;
     LastInteraction: string;
     PowerOn: boolean;
+    StopScheduling: boolean;
   }
 
   const refreshMetrics = async () => {
@@ -170,7 +171,10 @@ export default () => {
                       <Chip variant="outlined" color="primary" label={"Auto-off:  " + powerStatus?.AutoOffDuration ?? "--"} />
                     </Box>
                     <Box m={2}>
-                      <Chip variant="outlined" color="primary" label={"Schedule on:  " + (powerStatus?.ScheduleOn ? "true" : "false") ?? "--"} />
+                      <Chip variant="outlined" color="primary" label={"Schedule on:  " + (powerStatus?.CurrentlyInASchedule ? "true" : "false") ?? "--"} />
+                    </Box>
+                    <Box m={2}>
+                      <Chip variant="outlined" color="primary" label={"Stop scheduling:  " + (powerStatus?.CurrentlyInASchedule ? "true" : "false") ?? "--"} />
                     </Box>
                     <Box m={2}>
                       <Chip variant="outlined" color="primary" label={"On Since  " + powerStatus?.OnSince ?? "--"} />
