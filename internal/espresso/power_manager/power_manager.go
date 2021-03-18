@@ -26,6 +26,7 @@ type PowerManager struct {
 	LastInteraction      string
 	StopScheduling       bool
 	currentSchedule      PowerOnInterval
+	totalOff             bool
 }
 
 type PowerManagerStatus struct {
@@ -36,6 +37,7 @@ type PowerManagerStatus struct {
 	LastInteraction      string
 	PowerOn              bool
 	StopScheduling       bool
+	TotalOff             bool
 }
 
 func NewPowerManager(powerSchedule PowerSchedule, autoOffDuration time.Duration, powerRelayPinNum int, powerButtonPinNum int, powerLedPinNum int) *PowerManager {
@@ -63,6 +65,7 @@ func NewPowerManager(powerSchedule PowerSchedule, autoOffDuration time.Duration,
 		LastInteraction:      "Start-up Off",
 		StopScheduling:       false,
 		currentSchedule:      PowerOnInterval{},
+		totalOff:             false,
 	}
 }
 
@@ -71,6 +74,38 @@ func (p *PowerManager) Run() {
 		for {
 
 			currentTime := time.Now()
+
+			if p.isPowerButtonOn() {
+				count := 0
+				for p.isPowerButtonOn() {
+					count++
+					time.Sleep(100 * time.Millisecond)
+				}
+				if p.IsMachinePowerOn() {
+					p.powerOff()
+					p.LastInteraction = "Power Button Off"
+					if count > 10 {
+						for i := 0; i < 5; i++ {
+							p.powerLedPin.High()
+							time.Sleep(100 * time.Millisecond)	
+							p.powerLedPin.Low()
+						}
+						p.totalOff = true
+					}
+				} else {
+					p.powerOn()
+					p.totalOff = false
+					p.LastInteraction = "Power Button On"
+					if p.CurrentlyInASchedule {
+						p.StopScheduling = true
+					}
+				}
+
+			}
+
+			if p.totalOff {
+				continue
+			}
 
 			if !p.StopScheduling {
 				if p.inSchedule(currentTime) {
@@ -93,23 +128,6 @@ func (p *PowerManager) Run() {
 				p.LastInteraction = "Auto-off"
 			}
 
-			if p.isPowerButtonOn() {
-				for p.isPowerButtonOn() {
-					time.Sleep(100 * time.Millisecond)
-				}
-				if p.IsMachinePowerOn() {
-					p.powerOff()
-					p.LastInteraction = "Power Button Off"
-				} else {
-					p.powerOn()
-					p.LastInteraction = "Power Button On"
-					if p.CurrentlyInASchedule {
-						p.StopScheduling = true
-					}
-				}
-
-			}
-
 			time.Sleep(200 * time.Millisecond)
 		}
 	}()
@@ -124,6 +142,7 @@ func (p *PowerManager) GetStatus() PowerManagerStatus {
 		LastInteraction:      p.LastInteraction,
 		PowerOn:              p.IsMachinePowerOn(),
 		StopScheduling:       p.StopScheduling,
+		TotalOff:             p.totalOff,
 	}
 }
 
@@ -150,6 +169,7 @@ func (p *PowerManager) powerOff() {
 }
 
 func (p *PowerManager) PowerOn() {
+	p.totalOff = false
 	p.powerOn()
 }
 
@@ -158,6 +178,15 @@ func (p *PowerManager) PowerOff() {
 		p.StopScheduling = true
 	}
 	p.powerOff()
+}
+
+func (p *PowerManager) TotalPowerOff() {
+	if p.CurrentlyInASchedule {
+		p.StopScheduling = true
+	}
+	p.powerOff()
+	p.LastInteraction = "Total Power Off Call"
+	p.totalOff = true
 }
 
 func (p *PowerManager) ScheduleOn() {

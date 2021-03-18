@@ -107,6 +107,11 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(200)
 	})
+	router.Post("/power/total-off", func(writer http.ResponseWriter, req *http.Request) {
+		powerManager.TotalPowerOff()
+		writer.Header().Add("Content-Type", "application/json")
+		writer.WriteHeader(200)
+	})
 	router.Get("/power/status", func(writer http.ResponseWriter, req *http.Request) {
 
 		type PowerManagerStatus struct {
@@ -117,6 +122,7 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 			LastInteraction      string
 			PowerOn              bool
 			StopScheduling       bool
+			TotalOff             bool
 		}
 
 		writer.Header().Add("Content-Type", "application/json")
@@ -138,6 +144,7 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 			LastInteraction:      ps.LastInteraction,
 			PowerOn:              ps.PowerOn,
 			StopScheduling:       ps.StopScheduling,
+			TotalOff:             ps.TotalOff,
 		}
 
 		j, _ := json.Marshal(humanPowerStatus)

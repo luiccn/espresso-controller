@@ -87,6 +87,7 @@ export default () => {
     LastInteraction: string;
     PowerOn: boolean;
     StopScheduling: boolean;
+    TotalOff: boolean;
   }
 
   const refreshMetrics = async () => {
@@ -135,6 +136,12 @@ export default () => {
     fetch("/power/toggle", requestOptions).catch(() => { });
   }
 
+  function totalOffClick() {
+    setPowerOn("🤔")
+    const requestOptions = { method: 'POST' };
+    fetch("/power/total-off", requestOptions).catch(() => { });
+  }
+
   return (
     <>
       {showSetTemperatureModal && <ConfigurationDialog />}
@@ -175,6 +182,9 @@ export default () => {
                     </Box>
                     <Box m={2}>
                       <Chip variant="outlined" color="primary" label={"Stop scheduling:  " + (powerStatus?.StopScheduling ? "true" : "false") ?? "--"} />
+                    </Box>
+                    <Box m={2}>
+                      <Chip clickable onClick={totalOffClick} variant="outlined" color="primary" label={"Total off:  " + (powerStatus?.TotalOff ? "true" : "false") ?? "--"} />
                     </Box>
                     <Box m={2}>
                       <Chip variant="outlined" color="primary" label={"On Since  " + powerStatus?.OnSince ?? "--"} />
