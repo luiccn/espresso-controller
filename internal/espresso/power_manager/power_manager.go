@@ -67,7 +67,7 @@ func (p *PowerManager) Run() {
 
 			currentTime := time.Now()
 
-			if p.inSchedule(currentTime) {
+			if p.inSchedule(currentTime) && p.LastInteraction == "Power Button On" {
 				p.PowerOn()
 				p.ScheduleOn = true
 				p.LastInteraction = "Scheduled"
@@ -89,7 +89,12 @@ func (p *PowerManager) Run() {
 					time.Sleep(100 * time.Millisecond)
 				}
 				p.PowerToggle()
-				p.LastInteraction = "Power Button"
+				if p.IsMachinePowerOn() {
+					p.LastInteraction = "Power Button On"
+				} else {
+					p.LastInteraction = "Power Button Off"
+				}
+
 			}
 
 			time.Sleep(200 * time.Millisecond)
