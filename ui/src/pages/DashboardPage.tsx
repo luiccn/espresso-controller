@@ -174,7 +174,7 @@ export default () => {
                       <Chip variant="outlined" color="primary" label={"Schedule on:  " + (powerStatus?.CurrentlyInASchedule ? "true" : "false") ?? "--"} />
                     </Box>
                     <Box m={2}>
-                      <Chip variant="outlined" color="primary" label={"Stop scheduling:  " + (powerStatus?.CurrentlyInASchedule ? "true" : "false") ?? "--"} />
+                      <Chip variant="outlined" color="primary" label={"Stop scheduling:  " + (powerStatus?.StopScheduling ? "true" : "false") ?? "--"} />
                     </Box>
                     <Box m={2}>
                       <Chip variant="outlined" color="primary" label={"On Since  " + powerStatus?.OnSince ?? "--"} />

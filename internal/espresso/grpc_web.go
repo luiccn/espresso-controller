@@ -116,6 +116,7 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 			CurrentlyInASchedule bool
 			LastInteraction      string
 			PowerOn              bool
+			StopScheduling       bool
 		}
 
 		writer.Header().Add("Content-Type", "application/json")
@@ -136,6 +137,7 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 			CurrentlyInASchedule: ps.CurrentlyInASchedule,
 			LastInteraction:      ps.LastInteraction,
 			PowerOn:              ps.PowerOn,
+			StopScheduling:       ps.StopScheduling,
 		}
 
 		j, _ := json.Marshal(humanPowerStatus)

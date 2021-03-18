@@ -68,14 +68,14 @@ func (s *Server) Run() error {
 	days := []time.Weekday{time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Friday, time.Saturday, time.Sunday}
 
 	for _, d := range days {
-		poi := make([]power_manager.PowerOnInterval,2)
-		poi = append(poi, power_manager.PowerOnInterval{From: 6, To: 8})
-		poi = append(poi, power_manager.PowerOnInterval{From: 11, To: 13})
-		poi = append(poi, power_manager.PowerOnInterval{From: 14, To: 15})
+		poi := make([]power_manager.PowerOnInterval, 3)
+		poi[0] = power_manager.PowerOnInterval{From: 6, To: 8}
+		poi[1] = power_manager.PowerOnInterval{From: 11, To: 13}
+		poi[2] = power_manager.PowerOnInterval{From: 14, To: 15}
 		schedule[d] = poi
 	}
-	
-	powerManager := power_manager.NewPowerManager(power_manager.PowerSchedule{ Frames: schedule }, 60 * time.Minute, s.c.PowerButtonRelayPin, s.c.PowerButtonPin, s.c.PowerLedPin)
+
+	powerManager := power_manager.NewPowerManager(power_manager.PowerSchedule{Frames: schedule}, 60*time.Minute, s.c.PowerButtonRelayPin, s.c.PowerButtonPin, s.c.PowerLedPin)
 	s.powerManager = powerManager
 	powerManager.Run()
 
