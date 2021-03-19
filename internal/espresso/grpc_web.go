@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gregorychen3/espresso-controller/internal/espresso/power_manager"
@@ -173,6 +174,8 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 
 		r.Get("/static/*", func(writer http.ResponseWriter, request *http.Request) {
 			writer.Header().Set("Cache-Control", "max-age=31536000")
+			writer.Header().Set("Content-Encoding", "gzip")
+			request.URL.Path = strings.Replace(request.RequestURI, ".js", ".js.gz", 1)
 			http.StripPrefix("/static/", http.FileServer(http.FS(sub))).ServeHTTP(writer, request)
 		})
 
