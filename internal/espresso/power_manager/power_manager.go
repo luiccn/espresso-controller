@@ -85,11 +85,6 @@ func (p *PowerManager) Run() {
 					p.powerOff()
 					p.LastInteraction = "Power Button Off"
 					if count > 10 {
-						for i := 0; i < 5; i++ {
-							p.powerLedPin.High()
-							time.Sleep(100 * time.Millisecond)	
-							p.powerLedPin.Low()
-						}
 						p.totalOff = true
 					}
 				} else {
@@ -111,12 +106,12 @@ func (p *PowerManager) Run() {
 				if p.inSchedule(currentTime) {
 					p.powerOn()
 					p.CurrentlyInASchedule = true
-					p.LastInteraction = "Scheduled"
+					p.LastInteraction = "Scheduled Power On"
 				} else {
 					if p.CurrentlyInASchedule && p.IsMachinePowerOn() {
 						p.powerOff()
 						p.CurrentlyInASchedule = false
-						p.LastInteraction = "Off"
+						p.LastInteraction = "Scheduled Power Off"
 					}
 				}
 			} else {
