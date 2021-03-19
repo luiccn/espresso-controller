@@ -1,6 +1,7 @@
 package espresso
 
 import (
+	"embed"
 	"fmt"
 	"net"
 	"os"
@@ -48,12 +49,15 @@ type Server struct {
 
 	groupMonitor *temperature.Monitor
 
+	fs embed.FS
+
 	shutdownCh chan struct{}
 }
 
-func New(c Configuration) *Server {
+func New(c Configuration, fs embed.FS) *Server {
 	return &Server{
 		c:          c,
+		fs: fs,
 		shutdownCh: make(chan struct{}),
 	}
 }
@@ -148,7 +152,7 @@ func (s *Server) serveGRPC(listener net.Listener, grpcServer *grpc.Server) error
 
 func (s *Server) serveHTTP1(listener net.Listener, grpcServer *grpc.Server) error {
 	log.Info("Initializing gRPC web server", zap.Int("port", s.c.Port))
-	server := NewGRPCWebServer(grpcServer)
+	server := NewGRPCWebServer(grpcServer, s.fs)
 	if err := server.Listen(listener, true /*TODO*/, s.powerManager); err != nil {
 		log.Error("gRPC web server failed", zap.Error(err))
 		return errors.Wrap(err, "gRPC web server failed")

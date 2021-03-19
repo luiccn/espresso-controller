@@ -2,7 +2,9 @@ package espresso
 
 import (
 	"context"
+	"embed"
 	"encoding/json"
+	"io/fs"
 	"net"
 	"net/http"
 	"time"
@@ -12,7 +14,6 @@ import (
 	"github.com/gregorychen3/espresso-controller/internal/metrics"
 	"github.com/hako/durafmt"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -20,7 +21,6 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
-	"github.com/gobuffalo/packr/v2"
 )
 
 // WebMiddleware to handle gRPC calls from browser. It is also able to isolate
@@ -52,11 +52,13 @@ func NewGrpcWebMiddleware(grpcWeb *grpcweb.WrappedGrpcServer) *WebMiddleware {
 
 type GRPCWebServer struct {
 	grpcServer *grpc.Server
+	fs         embed.FS
 }
 
-func NewGRPCWebServer(server *grpc.Server) *GRPCWebServer {
+func NewGRPCWebServer(server *grpc.Server, uiFS embed.FS) *GRPCWebServer {
 	return &GRPCWebServer{
 		grpcServer: server,
+		fs:         uiFS,
 	}
 }
 
@@ -156,16 +158,8 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 		promhttp.Handler().ServeHTTP(w, req)
 	}))
 
-	box := packr.New("ui", "../../ui/build")
-	indexBytes, err := box.Find("index.html")
-	if err != nil {
-		return errors.Wrap(err, "loading ui html")
-	}
+	faviconBytes, _ := s.fs.ReadFile("ui/build/favicon.ico")
 
-	faviconBytes, err := box.Find("favicon.ico")
-	if err != nil {
-		return errors.Wrap(err, "loading favicon.ico")
-	}
 	router.Get("/favicon.ico", func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(200)
 		writer.Write(faviconBytes)
@@ -173,17 +167,21 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 
 	router.Group(func(r chi.Router) {
 		r.Use(NewGrpcWebMiddleware(grpcweb.WrapServer(s.grpcServer)).Handler)
+		sub, _ := fs.Sub(s.fs, "ui/build/static")
 
-		// serve static assets from the packr box
+		indexBytes, err := s.fs.ReadFile("ui/build/index.html")
+
 		r.Get("/static/*", func(writer http.ResponseWriter, request *http.Request) {
-			writer.Header().Add("Cache-Control", "max-age=31536000")
-			http.FileServer(box).ServeHTTP(writer, request)
+			writer.Header().Set("Cache-Control", "max-age=31536000")
+			http.StripPrefix("/static/", http.FileServer(http.FS(sub))).ServeHTTP(writer, request)
 		})
-
 
 		// respond with index.html for all other routes (react router routes)
 		r.Get("/*", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(200)
+			if err != nil {
+				log.Error("error serving index.html", zap.Error(err))
+			}
 			writer.Write(indexBytes)
 		})
 

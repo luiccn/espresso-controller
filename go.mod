@@ -1,6 +1,6 @@
 module github.com/gregorychen3/espresso-controller
 
-go 1.14
+go 1.16
 
 require (
 	github.com/RobinUS2/golang-moving-average v1.0.0
@@ -9,7 +9,6 @@ require (
 	github.com/go-chi/chi v4.1.0+incompatible
 	github.com/go-chi/cors v1.0.1
 	github.com/go-ole/go-ole v1.2.4 // indirect
-	github.com/gobuffalo/packr/v2 v2.8.0
 	github.com/golang/protobuf v1.3.5
 	github.com/google/uuid v1.1.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0
