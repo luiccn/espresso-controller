@@ -174,7 +174,12 @@ func (s *GRPCWebServer) Listen(listener net.Listener, enableDevLogger bool, powe
 	router.Group(func(r chi.Router) {
 		r.Use(NewGrpcWebMiddleware(grpcweb.WrapServer(s.grpcServer)).Handler)
 
-		r.Get("/static/*", http.FileServer(box).ServeHTTP) // serve static assets from the packr box
+		// serve static assets from the packr box
+		r.Get("/static/*", func(writer http.ResponseWriter, request *http.Request) {
+			writer.Header().Add("Cache-Control", "max-age=31536000")
+			http.FileServer(box).ServeHTTP(writer, request)
+		})
+
 
 		// respond with index.html for all other routes (react router routes)
 		r.Get("/*", func(writer http.ResponseWriter, request *http.Request) {
