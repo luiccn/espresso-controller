@@ -102,8 +102,13 @@ func (p *PowerManager) Run() {
 				continue
 			}
 
+			powerOnInterval, inSchedule := p.inSchedule(currentTime)
+			if inSchedule && p.currentSchedule != powerOnInterval {
+				p.StopScheduling = false
+				p.currentSchedule = powerOnInterval
+			}
 			if !p.StopScheduling {
-				if p.inSchedule(currentTime) {
+				if inSchedule {
 					p.powerOn()
 					p.CurrentlyInASchedule = true
 					p.LastInteraction = "Scheduled Power On"
@@ -212,7 +217,7 @@ func (p *PowerManager) isPowerButtonOn() bool {
 	return p.powerButtonPin.Read() == rpio.High
 }
 
-func (p *PowerManager) inSchedule(currentTime time.Time) bool {
+func (p *PowerManager) inSchedule(currentTime time.Time) (PowerOnInterval, bool) {
 
 	hour := currentTime.Hour()
 	v, present := p.PowerSchedule.Frames[currentTime.Weekday()]
@@ -220,16 +225,12 @@ func (p *PowerManager) inSchedule(currentTime time.Time) bool {
 	if present {
 		for _, powerOnInterval := range v {
 			if hour >= powerOnInterval.From && hour <= powerOnInterval.To {
-				if p.StopScheduling && powerOnInterval != p.currentSchedule {
-					p.StopScheduling = false
-				}
-				p.currentSchedule = powerOnInterval
-				return true
+				return powerOnInterval, true
 			}
 		}
 	}
 
-	return false
+	return p.currentSchedule, false
 }
 
 func (p *PowerManager) Shutdown() {
