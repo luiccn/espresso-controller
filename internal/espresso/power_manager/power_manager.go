@@ -75,62 +75,73 @@ func (p *PowerManager) Run() {
 
 			currentTime := time.Now()
 
-			if p.isPowerButtonOn() {
-				count := 0
-				for p.isPowerButtonOn() {
-					count++
-					time.Sleep(100 * time.Millisecond)
-				}
-				if p.IsMachinePowerOn() {
-					p.powerOff()
-					p.LastInteraction = "Power Button Off"
-					if count > 10 {
-						p.totalOff = true
-					}
-				} else {
-					p.powerOn()
-					p.totalOff = false
-					p.LastInteraction = "Power Button On"
-					if p.CurrentlyInASchedule {
-						p.StopScheduling = true
-					}
-				}
-
-			}
+			p.powerButtonBehaviour()
 
 			if p.totalOff {
 				continue
 			}
 
-			powerOnInterval, inSchedule := p.inSchedule(currentTime)
-			if inSchedule && p.currentSchedule != powerOnInterval {
-				p.StopScheduling = false
-				p.currentSchedule = powerOnInterval
-			}
-			if !p.StopScheduling {
-				if inSchedule {
-					p.powerOn()
-					p.CurrentlyInASchedule = true
-					p.LastInteraction = "Scheduled Power On"
-				} else {
-					if p.CurrentlyInASchedule && p.IsMachinePowerOn() {
-						p.powerOff()
-						p.CurrentlyInASchedule = false
-						p.LastInteraction = "Scheduled Power Off"
-					}
-				}
-			} else {
-				p.CurrentlyInASchedule = false
-			}
-
-			if !p.OnSince.Equal(time.Time{}) && time.Now().Sub(p.OnSince) >= p.AutoOffDuration && !p.CurrentlyInASchedule {
-				p.powerOff()
-				p.LastInteraction = "Auto-off"
-			}
+			p.powerScheduleBehaviour(currentTime)
+			p.autoOffBehaviour()
 
 			time.Sleep(200 * time.Millisecond)
 		}
 	}()
+}
+
+func (p *PowerManager) autoOffBehaviour() {
+	if !p.OnSince.Equal(time.Time{}) && time.Now().Sub(p.OnSince) >= p.AutoOffDuration && !p.CurrentlyInASchedule {
+		p.powerOff()
+		p.LastInteraction = "Auto-off"
+	}
+}
+
+func (p *PowerManager) powerScheduleBehaviour(currentTime time.Time) {
+	powerOnInterval, inSchedule := p.inSchedule(currentTime)
+	if inSchedule && p.currentSchedule != powerOnInterval {
+		p.StopScheduling = false
+		p.currentSchedule = powerOnInterval
+	}
+	if !p.StopScheduling {
+		if inSchedule {
+			p.powerOn()
+			p.CurrentlyInASchedule = true
+			p.LastInteraction = "Scheduled Power On"
+		} else {
+			if p.CurrentlyInASchedule && p.IsMachinePowerOn() {
+				p.powerOff()
+				p.CurrentlyInASchedule = false
+				p.LastInteraction = "Scheduled Power Off"
+			}
+		}
+	} else {
+		p.CurrentlyInASchedule = false
+	}
+}
+
+func (p *PowerManager) powerButtonBehaviour() {
+	if p.isPowerButtonOn() {
+		count := 0
+		for p.isPowerButtonOn() {
+			count++
+			time.Sleep(100 * time.Millisecond)
+		}
+		if p.IsMachinePowerOn() {
+			p.powerOff()
+			p.LastInteraction = "Power Button Off"
+			if count > 10 {
+				p.totalOff = true
+			}
+		} else {
+			p.powerOn()
+			p.totalOff = false
+			p.LastInteraction = "Power Button On"
+			if p.CurrentlyInASchedule {
+				p.StopScheduling = true
+			}
+		}
+
+	}
 }
 
 func (p *PowerManager) GetStatus() PowerManagerStatus {
