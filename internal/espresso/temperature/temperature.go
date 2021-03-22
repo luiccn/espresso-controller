@@ -28,6 +28,7 @@ type Monitor struct {
 	sampler              Sampler
 	temperatureHistoryMu sync.RWMutex
 	temperatureHistory   []*Sample
+	channeMutex          sync.RWMutex
 }
 
 // NewMonitor creates a sampler using a sample rate
@@ -84,14 +85,18 @@ func (m *Monitor) Run() {
 }
 
 func (m *Monitor) Subscribe() (uuid.UUID, chan *Sample) {
+	m.channeMutex.Lock()
 	subId := uuid.New()
 	subscriptionCh := make(chan *Sample)
 	m.subscriptionChans[subId] = subscriptionCh
+	m.channeMutex.Unlock()
 	return subId, subscriptionCh
 }
 
 func (m *Monitor) Unsubscribe(subId uuid.UUID) {
+	m.channeMutex.Lock()
 	delete(m.subscriptionChans, subId)
+	m.channeMutex.Unlock()
 }
 
 func (m *Monitor) GetHistory() []*Sample {

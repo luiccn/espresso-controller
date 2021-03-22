@@ -122,25 +122,26 @@ func (p *PowerManager) powerScheduleBehaviour(currentTime time.Time) {
 func (p *PowerManager) powerButtonBehaviour() {
 	if p.isPowerButtonOn() {
 		count := 0
-		for p.isPowerButtonOn() {
+		for p.isPowerButtonOn() && count < 10 {
 			count++
 			time.Sleep(100 * time.Millisecond)
 		}
+
 		if p.IsMachinePowerOn() {
 			p.powerOff()
 			p.LastInteraction = "Power Button Off"
-			if count > 10 {
-				p.totalOff = true
+			if p.CurrentlyInASchedule {
+				p.StopScheduling = true
 			}
 		} else {
 			p.powerOn()
 			p.totalOff = false
 			p.LastInteraction = "Power Button On"
-			if p.CurrentlyInASchedule {
-				p.StopScheduling = true
-			}
 		}
 
+		for p.isPowerButtonOn() {
+			time.Sleep(100 * time.Millisecond)
+		}
 	}
 }
 
