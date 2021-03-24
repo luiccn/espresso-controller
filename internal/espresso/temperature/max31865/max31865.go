@@ -98,13 +98,8 @@ func (s *Max31865) ReadTemperature(RTDnominal float32, refResistor float32) floa
 
 	Rt := float32(s.ReadRTD())
 
-	log.Info(fmt.Sprintf("Rt %f Fault %d", Rt, s.readFault()))
-
-
 	Rt /= 32768
 	Rt *= refResistor
-
-	log.Info(fmt.Sprintf("Rt %f Fault %d", Rt, s.readFault()))
 
 	Z1 := -_RTD_A
 	Z2 := _RTD_A*_RTD_A - (4 * _RTD_B)
