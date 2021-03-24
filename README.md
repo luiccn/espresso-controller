@@ -20,7 +20,7 @@ PID temperature control and monitoring for a Rancilio Silvia or comparable espre
 
 The application is a single Go binary implementing:
 
-- gRPC API as defined in [espresso.proto](https://github.com/gregorychen3/espresso-controller/blob/master/pkg/espressopb/espresso.proto),
+- gRPC API as defined in [espresso.proto](https://github.com/luiccn/espresso-controller/blob/master/pkg/espressopb/espresso.proto),
 - dashboard web app using React and [Material-UI](https://material-ui.com/), and
 - `/metrics` web endpoint for Prometheus scraping
 
@@ -69,7 +69,7 @@ The thermocouple should be attached securely to the outer wall of the boiler. On
 1. Download the application and start it.
 
    ```console
-   pi@raspberrypi:~ $ curl -L -o espresso https://github.com/gregorychen3/espresso-controller/releases/download/v0.2.2/espresso
+   pi@raspberrypi:~ $ curl -L -o espresso https://github.com/luiccn/espresso-controller/releases/download/v0.2.2/espresso
    pi@raspberrypi:~ $ chmod +x espresso
    pi@raspberrypi:~ $ ./espresso -v
 
@@ -92,7 +92,7 @@ The thermocouple should be attached securely to the outer wall of the boiler. On
        █                              █─
        ╙▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
 
-   For more information, go to https://github.com/gregorychen3/espresso-controller
+   For more information, go to https://github.com/luiccn/espresso-controller
 
    2020-05-24T16:45:27.372-0400	INFO	espresso/server.go:115	Initializing gRPC server	{"port": 8080}
    2020-05-24T16:45:27.372-0400	INFO	espresso/server.go:123	Initializing gRPC web server	{"port": 8080}

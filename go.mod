@@ -1,4 +1,4 @@
-module github.com/gregorychen3/espresso-controller
+module github.com/luiccn/espresso-controller
 
 go 1.16
 

@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gregorychen3/espresso-controller/internal/helpers"
+	"github.com/luiccn/espresso-controller/internal/helpers"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

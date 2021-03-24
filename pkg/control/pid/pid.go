@@ -4,12 +4,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/gregorychen3/espresso-controller/internal/espresso/heating_element"
-	"github.com/gregorychen3/espresso-controller/internal/espresso/power_manager"
-	"github.com/gregorychen3/espresso-controller/internal/espresso/temperature"
-	"github.com/gregorychen3/espresso-controller/internal/fifo"
-	"github.com/gregorychen3/espresso-controller/internal/log"
-	"github.com/gregorychen3/espresso-controller/pkg/control"
+	"github.com/luiccn/espresso-controller/internal/espresso/heating_element"
+	"github.com/luiccn/espresso-controller/internal/espresso/power_manager"
+	"github.com/luiccn/espresso-controller/internal/espresso/temperature"
+	"github.com/luiccn/espresso-controller/internal/fifo"
+	"github.com/luiccn/espresso-controller/internal/log"
+	"github.com/luiccn/espresso-controller/pkg/control"
 	"go.uber.org/zap"
 )
 
@@ -61,12 +61,12 @@ func (c *PID) Run() error {
 
 				prevSlopes.Push(prevErrs.Last() - curErr)
 				avgSlope := prevSlopes.Average()
-	
+
 				prevErrs.Push(curErr)
 				errSum := prevErrs.Sum()
-	
+
 				rawOut := (c.P*curErr + c.I*(errSum) - c.D*(avgSlope)) / 100
-	
+
 				var out float32
 				if rawOut <= 0 {
 					out = 0
@@ -75,7 +75,7 @@ func (c *PID) Run() error {
 				} else {
 					out = rawOut
 				}
-	
+
 				log.Debug("Setting duty factor",
 					zap.Float32("dutyFactor", out),
 					zap.Float32("curErr", curErr),

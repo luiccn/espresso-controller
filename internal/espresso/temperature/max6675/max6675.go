@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/gregorychen3/espresso-controller/internal/espresso/temperature"
+	"github.com/luiccn/espresso-controller/internal/espresso/temperature"
 	"github.com/stianeikeland/go-rpio/v4"
 )
 
@@ -60,7 +60,7 @@ func (m *Max6675) readBits() uint32 {
 
 func bitsToTemperature(bits uint32) float32 {
 	//log.Info(fmt.Sprintf("temperature bits %016b", bits))
-	thermoData := bits >> 3 // only use 12 bits
+	thermoData := bits >> 3              // only use 12 bits
 	result := float32(thermoData) * 0.25 // 12 bits = 4096 possible temperature, range of 0 - 1024 degrees, 0.25 degree per unit
 	return result
 }
@@ -69,6 +69,6 @@ func checkErr(bits uint32) error {
 	openCircuit := bits&0b100 == 1 // fault bit D2
 	if openCircuit {
 		return errors.New("open circuit")
-	} 
+	}
 	return nil
 }

@@ -9,15 +9,15 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gregorychen3/espresso-controller/internal/espresso/heating_element"
-	"github.com/gregorychen3/espresso-controller/internal/espresso/power_manager"
-	"github.com/gregorychen3/espresso-controller/internal/espresso/temperature"
-	"github.com/gregorychen3/espresso-controller/internal/espresso/temperature/max6675"
-	"github.com/gregorychen3/espresso-controller/internal/log"
-	"github.com/gregorychen3/espresso-controller/pkg/espressopb"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	"github.com/luiccn/espresso-controller/internal/espresso/heating_element"
+	"github.com/luiccn/espresso-controller/internal/espresso/power_manager"
+	"github.com/luiccn/espresso-controller/internal/espresso/temperature"
+	"github.com/luiccn/espresso-controller/internal/espresso/temperature/max31865"
+	"github.com/luiccn/espresso-controller/internal/log"
+	"github.com/luiccn/espresso-controller/pkg/espressopb"
 	"github.com/pkg/errors"
 	"github.com/soheilhy/cmux"
 	"github.com/stianeikeland/go-rpio/v4"
@@ -35,6 +35,7 @@ type Configuration struct {
 	BoilerThermCsPin       int
 	BoilerThermClkPin      int
 	BoilerThermMisoPin     int
+	BoilerThermMosiPin     int
 }
 
 type Server struct {
@@ -88,7 +89,7 @@ func (s *Server) Run() error {
 	heatingElem.Run()
 
 	boilerMonitor := temperature.NewMonitor(
-		max6675.NewMax6675(s.c.BoilerThermCsPin, s.c.BoilerThermClkPin, s.c.BoilerThermMisoPin),
+		max31865.NewMax31865(s.c.BoilerThermCsPin, s.c.BoilerThermClkPin, s.c.BoilerThermMisoPin, s.c.BoilerThermMosiPin),
 		time.Second,
 	)
 	boilerMonitor.Run()

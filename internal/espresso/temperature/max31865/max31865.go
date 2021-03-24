@@ -1,10 +1,12 @@
 package max31865
 
 import (
+	"fmt"
 	"math"
 	"time"
 
-	"github.com/gregorychen3/espresso-controller/internal/espresso/temperature"
+	"github.com/luiccn/espresso-controller/internal/espresso/temperature"
+	"github.com/luiccn/espresso-controller/internal/log"
 	"github.com/stianeikeland/go-rpio/v4"
 )
 
@@ -66,7 +68,7 @@ func (m *Max31865) Sample() (*temperature.Sample, error) {
 	}, nil
 }
 
-func NewMax31865(cs int, miso int, mosi int, clk int) *Max31865 {
+func NewMax31865(cs int, clk int, miso int, mosi int) *Max31865 {
 
 	s := &Max31865{}
 
@@ -77,9 +79,12 @@ func NewMax31865(cs int, miso int, mosi int, clk int) *Max31865 {
 
 	s.csPin.Output()
 	s.csPin.High()
-	
+
 	s.clkPin.Output()
 	s.clkPin.Low()
+
+	s.misoPin.Input()
+	s.mosiPin.Output()
 
 	s.setWires(WIRE_3)
 	s.enableBias(false)
@@ -92,8 +97,14 @@ func NewMax31865(cs int, miso int, mosi int, clk int) *Max31865 {
 func (s *Max31865) ReadTemperature(RTDnominal float32, refResistor float32) float32 {
 
 	Rt := float32(s.ReadRTD())
+
+	log.Info(fmt.Sprintf("Rt %f Fault %d", Rt, s.readFault()))
+
+
 	Rt /= 32768
 	Rt *= refResistor
+
+	log.Info(fmt.Sprintf("Rt %f Fault %d", Rt, s.readFault()))
 
 	Z1 := -_RTD_A
 	Z2 := _RTD_A*_RTD_A - (4 * _RTD_B)
@@ -167,8 +178,6 @@ func (s *Max31865) setWires(wires int) {
 	s.write8(_CONFIG_REG, t)
 }
 
-
-
 func (s *Max31865) ReadRTD() uint16 {
 
 	s.clearFault()
@@ -190,7 +199,7 @@ func (s *Max31865) write(addr uint8, v []uint8) {
 	addr |= 0x80
 	s.clkPin.Low()
 	s.csPin.Low()
-	
+
 	s.transfer8(addr)
 	for n := 0; n < len(v); n++ {
 		s.transfer8(v[n])
@@ -234,9 +243,10 @@ func (s *Max31865) transfer8(v uint8) uint8 {
 
 		if bv != 0 {
 			s.mosiPin.High()
-		} else { s.mosiPin.Low() }
-		
-		
+		} else {
+			s.mosiPin.Low()
+		}
+
 		s.clkPin.Low()
 
 		if s.misoPin.Read() == rpio.High {

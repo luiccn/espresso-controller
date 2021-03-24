@@ -3,11 +3,11 @@ package main
 import (
 	"embed"
 
-	"github.com/gregorychen3/espresso-controller/cmd/espresso/cmdutil"
-	"github.com/gregorychen3/espresso-controller/cmd/espresso/config"
-	"github.com/gregorychen3/espresso-controller/cmd/espresso/log"
-	"github.com/gregorychen3/espresso-controller/internal/espresso"
-	serverLogger "github.com/gregorychen3/espresso-controller/internal/log"
+	"github.com/luiccn/espresso-controller/cmd/espresso/cmdutil"
+	"github.com/luiccn/espresso-controller/cmd/espresso/config"
+	"github.com/luiccn/espresso-controller/cmd/espresso/log"
+	"github.com/luiccn/espresso-controller/internal/espresso"
+	serverLogger "github.com/luiccn/espresso-controller/internal/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -18,9 +18,10 @@ var configKeys = []config.Key{
 	{Path: "PowerButtonPin", ShortFlag: "", Description: "The GPIO connected to the power button of the espresso machine", Default: 17},
 	{Path: "PowerButtonRelayPin", ShortFlag: "", Description: "The GPIO connected to the power button relay", Default: 21},
 	{Path: "PowerLedPin", ShortFlag: "", Description: "The GPIO connected to the power LED", Default: 16},
-	{Path: "BoilerThermCsPin", ShortFlag: "", Description: "The GPIO pin connected to the boiler thermometer's max6675 chip select, aka chip enable", Default: 3},
-	{Path: "BoilerThermClkPin", ShortFlag: "", Description: "The GPIO pin connected to the boiler thermometer's max6675 clock", Default: 4},
-	{Path: "BoilerThermMisoPin", ShortFlag: "", Description: "The GPIO pin connected to the boiler thermometer's max6675 data output", Default: 2},
+	{Path: "BoilerThermCsPin", ShortFlag: "", Description: "The GPIO pin connected to the boiler thermometer's max31865 chip select, aka chip enable", Default: 5},
+	{Path: "BoilerThermClkPin", ShortFlag: "", Description: "The GPIO pin connected to the boiler thermometer's max31865 clock", Default: 11},
+	{Path: "BoilerThermMisoPin", ShortFlag: "", Description: "The GPIO pin connected to the boiler thermometer's max31865 data output", Default: 9},
+	{Path: "BoilerThermMosiPin", ShortFlag: "", Description: "The GPIO pin connected to the boiler thermometer's max31865 data input", Default: 10},
 	{Path: "Verbose", ShortFlag: "v", Description: "verbose output", Default: false},
 }
 

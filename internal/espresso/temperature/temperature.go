@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/gregorychen3/espresso-controller/internal/log"
+	"github.com/luiccn/espresso-controller/internal/log"
 	"go.uber.org/zap"
 
 	movingaverage "github.com/RobinUS2/golang-moving-average"
@@ -28,7 +28,7 @@ type Monitor struct {
 	sampler              Sampler
 	temperatureHistoryMu sync.RWMutex
 	temperatureHistory   []*Sample
-	channelMu          sync.RWMutex
+	channelMu            sync.RWMutex
 }
 
 // NewMonitor creates a sampler using a sample rate
@@ -39,7 +39,7 @@ func NewMonitor(sampler Sampler, sampleRate time.Duration) *Monitor {
 	}
 }
 
-// Run samples temperature on interval 
+// Run samples temperature on interval
 func (m *Monitor) Run() {
 	ma := movingaverage.Concurrent(movingaverage.New(10))
 	go func() {
@@ -53,8 +53,8 @@ func (m *Monitor) Run() {
 
 			sampleValue := float64(sample.Value)
 			ma.Add(sampleValue)
-			sample.Value = float32(math.Round( ma.Avg() * 10) * 0.1)
-			
+			sample.Value = float32(math.Round(ma.Avg()*10) * 0.1)
+
 			m.temperatureHistoryMu.Lock()
 			m.temperatureHistory = append(m.temperatureHistory, sample)
 			m.temperatureHistoryMu.Unlock()
