@@ -20,7 +20,6 @@ type PowerManager struct {
 	AutoOffDuration      time.Duration
 	powerRelayPin        rpio.Pin
 	powerButtonPin       rpio.Pin
-	powerLedPin          rpio.Pin
 	OnSince              time.Time
 	CurrentlyInASchedule bool
 	LastInteraction      string
@@ -61,7 +60,6 @@ func NewPowerManager(powerSchedule PowerSchedule, autoOffDuration time.Duration,
 		OnSince:              time.Time{},
 		powerRelayPin:        powerRelayPin,
 		powerButtonPin:       powerButtonPin,
-		powerLedPin:          powerLedPin,
 		LastInteraction:      "Start-up Off",
 		StopScheduling:       false,
 		currentSchedule:      PowerOnInterval{},
@@ -165,7 +163,6 @@ func (p *PowerManager) SetSchedule(newPowerSchedule PowerSchedule) {
 func (p *PowerManager) powerOn() {
 	if p.IsMachinePowerOff() {
 		p.powerRelayPin.High()
-		p.powerLedPin.High()
 		p.OnSince = time.Now()
 		p.LastInteraction = "Power On Call"
 	}
@@ -174,7 +171,6 @@ func (p *PowerManager) powerOn() {
 func (p *PowerManager) powerOff() {
 	if p.IsMachinePowerOn() {
 		p.powerRelayPin.Low()
-		p.powerLedPin.Low()
 		p.OnSince = time.Time{}
 		p.LastInteraction = "Power Off Call"
 	}
