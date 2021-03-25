@@ -74,9 +74,17 @@ func (s *Server) Run() error {
 
 	for _, d := range days {
 		poi := make([]power_manager.PowerOnInterval, 3)
-		poi[0] = power_manager.PowerOnInterval{From: 6, To: 8}
-		poi[1] = power_manager.PowerOnInterval{From: 11, To: 13}
-		poi[2] = power_manager.PowerOnInterval{From: 14, To: 15}
+		
+		if d == time.Saturday || d == time.Sunday {
+			poi[0] = power_manager.PowerOnInterval{From: 7, To: 9}
+			poi[1] = power_manager.PowerOnInterval{From: 11, To: 13}
+			poi[2] = power_manager.PowerOnInterval{From: 14, To: 15}
+		} else {
+			poi[0] = power_manager.PowerOnInterval{From: 6, To: 8}
+			poi[1] = power_manager.PowerOnInterval{From: 11, To: 13}
+			poi[2] = power_manager.PowerOnInterval{From: 14, To: 15}
+		}
+		
 		schedule[d] = poi
 	}
 
