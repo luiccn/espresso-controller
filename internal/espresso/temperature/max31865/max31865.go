@@ -1,12 +1,10 @@
 package max31865
 
 import (
-	"fmt"
 	"math"
 	"time"
 
 	"github.com/luiccn/espresso-controller/internal/espresso/temperature"
-	"github.com/luiccn/espresso-controller/internal/log"
 	"github.com/stianeikeland/go-rpio/v4"
 )
 
