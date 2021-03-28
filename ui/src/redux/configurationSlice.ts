@@ -79,7 +79,6 @@ const configurationSlice = createSlice({
         i: action.payload.getI(),
         d: action.payload.getD(),
       };
-      toast.success("PID successfully configured");
     });
   },
 });
